@@ -1,0 +1,47 @@
+# 공통 설정. 학교 클러스터 값(주소·비밀번호)은 gitops 레포의 ConfigMap trace-infra와 Secret trace-secrets가 환경 변수로 넣는다
+server:
+  port: 8080
+  shutdown: graceful
+
+spring:
+  application:
+    name: gateway
+  threads:
+    virtual:
+      enabled: true
+  cloud:
+    gateway:
+      server:
+        webflux:
+          # REST API v0의 경로 앞부분으로 서버를 고른다(GAKDO/docs design/rest-api-v0.md)
+          routes:
+            - id: auth
+              uri: ${AUTH_SERVER_URL:http://auth-server:8080}
+              predicates:
+                - Path=/api/v1/auth/**
+            - id: rental
+              uri: ${RENTAL_SERVER_URL:http://rental-server:8080}
+              predicates:
+                - Path=/api/v1/rentals/**,/api/v1/devices/**,/api/v1/device-models/**,/api/v1/pilot/**
+            - id: capture
+              uri: ${CAPTURE_SERVER_URL:http://capture-server:8080}
+              predicates:
+                - Path=/api/v1/captures/**
+            - id: diagnostics
+              uri: ${DIAGNOSTICS_SERVER_URL:http://diagnostics-server:8080}
+              predicates:
+                - Path=/api/v1/diagnostics/**
+            - id: report
+              uri: ${REPORT_SERVER_URL:http://report-server:8080}
+              predicates:
+                - Path=/api/v1/reports/**,/api/v1/verify/**
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true   # /actuator/health/liveness·readiness (쿠버네티스 프로브)

@@ -36,6 +36,9 @@ spring:
               predicates:
                 - Path=/api/v1/reports/**,/api/v1/verify/**
 
+app:
+  commit: ${APP_COMMIT:unknown}   # 이미지에 구운 커밋 SHA. /ping 응답에 실려 배포 확인에 쓴다
+
 management:
   endpoints:
     web:

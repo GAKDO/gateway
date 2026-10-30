@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-@WebFluxTest(PingController.class)
+@WebFluxTest(controllers = PingController.class, properties = "app.commit=test-sha")
 class PingControllerTest {
 
     @Autowired
@@ -17,6 +17,7 @@ class PingControllerTest {
                 .expectStatus().isOk()
                 .expectBody()
                 .jsonPath("$.service").isEqualTo("gateway")
-                .jsonPath("$.status").isEqualTo("ok");
+                .jsonPath("$.status").isEqualTo("ok")
+                .jsonPath("$.commit").isEqualTo("test-sha");
     }
 }

@@ -31,6 +31,20 @@ TRACE의 JWT 검증·라우팅·요청 제한 (Spring Cloud Gateway) 레포입�
 Java 21, Spring Boot 3.5.7, Spring Cloud Gateway 2025.0.3(WebFlux, spring.cloud.gateway.server.webflux.routes), Spring Security OAuth2 리소스 서버(reactive, auth-server JWKS), 요청 제한은 RequestRateLimiter + Redis(키 접두사 trace:). 테스트는 WebTestClient + 테스트용 JWKS, JaCoCo 40% 이상. 기존 라우트·ping·Dockerfile을 유지한다.
 ```
 
+## 팀 운영 (모든 세션)
+
+- **세션을 시작하면 먼저 `/trace-standup start`, 끝내기 전에 `/trace-standup end`.** 보드와 어제·오늘 기록을 읽고, 오늘 할 일·한 일·남은 것·막힌 것을 GAKDO/docs `team/`에 적는다.
+- 세션에 이 레포와 함께 **GAKDO/docs를 연결**하면 바로 읽고 쓸 수 있다.
+- 남은 작업은 `team/board.md`, 코드 컨벤션 전체는 `team/conventions.md`. 아래는 이 레포에 해당하는 요약이다.
+
+## 코드 컨벤션 요약
+
+- 패키지는 `com.gakdo.trace.<서비스>.<기능>` 아래 `api`·`application`·`domain`·`infra`.
+- DTO는 `record`(`XxxRequest`·`XxxResponse`), 엔티티를 API로 내보내지 않음. 생성자 주입, `@Transactional`은 application에만.
+- 도메인 예외 → `@RestControllerAdvice` 한 곳에서 Problem Details. Flyway는 새 파일만 더함(`V<번호>__<설명>.sql`).
+- 테스트 이름은 수용 기준 문장. Testcontainers는 `@Testcontainers(disabledWithoutDocker = true)`.
+- 커밋 `<종류>(<범위>): <내용>`, PR 하나 = 백로그 기능 하나(코드 400줄 넘으면 나눔), PR 본문에 백로그 ID·요구사항 ID·테스트 방법.
+
 ## 꼭 지킬 것
 
 - 계약(API·이벤트·진단 JSON·코드 값)을 바꿔야 하면 코드를 고치지 말고 멈추고 사람에게 알린다.

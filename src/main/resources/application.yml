@@ -70,6 +70,9 @@ trace:
     web-origins: ${TRACE_WEB_ORIGIN:http://localhost:5173}
   redis:
     key-prefix: ${REDIS_KEY_PREFIX:trace:}
+  rate-limit:
+    # 앞단 프록시가 넣는 실제 사용자 IP 헤더. 학교 클러스터는 Cloudflare 뒤라 gitops infra.env에서 CF-Connecting-IP로 켠다
+    client-ip-header: ${TRACE_CLIENT_IP_HEADER:}
 
 app:
   commit: ${APP_COMMIT:unknown}   # 이미지에 구운 커밋 SHA. /ping 응답에 실려 배포 확인에 쓴다

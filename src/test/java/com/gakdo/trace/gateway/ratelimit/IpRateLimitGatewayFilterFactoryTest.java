@@ -93,6 +93,35 @@ class IpRateLimitGatewayFilterFactoryTest {
     }
 
     @Test
+    void Cloudflare_뒤에서는_CF_Connecting_IP로_사용자를_구분한다() {
+        IpRateLimitGatewayFilterFactory factory = new IpRateLimitGatewayFilterFactory(counter, writer, "trace:",
+                "CF-Connecting-IP", CLOCK);
+        IpRateLimitGatewayFilterFactory.Config config = new IpRateLimitGatewayFilterFactory.Config();
+        config.setName("login");
+        config.setLimit(3);
+        GatewayFilter filter = factory.apply(config);
+        // 연결 주소는 모두 같은 프록시 IP지만 사용자 IP가 다르면 서로 한도를 나눠 쓰지 않는다
+        for (int user = 0; user < 2; user++) {
+            for (int i = 0; i < 3; i++) {
+                MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.post("/api/v1/auth/login")
+                        .header("CF-Connecting-IP", "203.0.113." + user)
+                        .remoteAddress(new InetSocketAddress("172.68.0.1", 50000)));
+                filter.filter(exchange, chain).block();
+            }
+        }
+        assertThat(passed.get()).isEqualTo(6);
+    }
+
+    @Test
+    void 사용자_IP_헤더가_IP_모양이_아니면_연결_주소로_센다() {
+        MockServerWebExchange exchange = MockServerWebExchange.from(MockServerHttpRequest.post("/x")
+                .header("CF-Connecting-IP", "x:*:evil key")
+                .remoteAddress(new InetSocketAddress("10.0.0.9", 50000)));
+        assertThat(IpRateLimitGatewayFilterFactory.clientIp(exchange, "CF-Connecting-IP")).isEqualTo("10.0.0.9");
+        assertThat(IpRateLimitGatewayFilterFactory.clientIp(exchange, null)).isEqualTo("10.0.0.9");
+    }
+
+    @Test
     void Redis_장애면_제한_없이_통과한다() {
         RateCounter broken = (key, window) -> Mono.error(new IllegalStateException("redis down"));
         GatewayFilter filter = filter(broken);

@@ -6,6 +6,9 @@ main에 버전이 적힌 CHANGELOG가 올라가면 release.yml이 태그와 GitH
 
 ## [Unreleased]
 
+### 추가
+- report-server 관리자 수동 봉인 `POST /api/v1/reports/rentals/{rentalId}/checkpoints/{checkpointId}/seal`·사용 기록 `GET /api/v1/reports/manual-seals` 접근 규칙(ADMIN만, contracts #11)
+
 ## [0.1.0] - 2026-11-02
 
 **목표: 첫 클러스터 배포와 https://gakdo.site 공개**

@@ -20,7 +20,9 @@ public class RateLimitConfig {
     @Bean
     public IpRateLimitGatewayFilterFactory ipRateLimitGatewayFilterFactory(
             RateCounter rateCounter, ProblemWriter problemWriter,
-            @Value("${trace.redis.key-prefix:trace:}") String keyPrefix) {
-        return new IpRateLimitGatewayFilterFactory(rateCounter, problemWriter, keyPrefix, Clock.systemUTC());
+            @Value("${trace.redis.key-prefix:trace:}") String keyPrefix,
+            @Value("${trace.rate-limit.client-ip-header:}") String clientIpHeader) {
+        return new IpRateLimitGatewayFilterFactory(rateCounter, problemWriter, keyPrefix, clientIpHeader,
+                Clock.systemUTC());
     }
 }

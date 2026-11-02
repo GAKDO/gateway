@@ -4,6 +4,7 @@ import java.net.InetSocketAddress;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,15 +30,29 @@ public class IpRateLimitGatewayFilterFactory
 
     private final RateCounter counter;
     private final ProblemWriter problemWriter;
+    /** IPv4·IPv6 글자만 허용해 헤더 값이 Redis 키를 망가뜨리지 못하게 한다. */
+    private static final Pattern IP_LITERAL = Pattern.compile("[0-9A-Fa-f:.]{2,45}");
+
     private final String keyPrefix;
+    private final String clientIpHeader;
     private final Clock clock;
 
     public IpRateLimitGatewayFilterFactory(RateCounter counter, ProblemWriter problemWriter, String keyPrefix,
                                            Clock clock) {
+        this(counter, problemWriter, keyPrefix, null, clock);
+    }
+
+    /**
+     * @param clientIpHeader 앞단 프록시가 넣는 실제 사용자 IP 헤더(예: Cloudflare {@code CF-Connecting-IP}).
+     *                       비우면 연결 주소만 쓴다.
+     */
+    public IpRateLimitGatewayFilterFactory(RateCounter counter, ProblemWriter problemWriter, String keyPrefix,
+                                           String clientIpHeader, Clock clock) {
         super(Config.class);
         this.counter = counter;
         this.problemWriter = problemWriter;
         this.keyPrefix = keyPrefix == null ? "" : keyPrefix;
+        this.clientIpHeader = clientIpHeader == null || clientIpHeader.isBlank() ? null : clientIpHeader.trim();
         this.clock = clock;
     }
 
@@ -52,7 +67,7 @@ public class IpRateLimitGatewayFilterFactory
         return (exchange, chain) -> {
             long nowSeconds = clock.instant().getEpochSecond();
             long windowStart = nowSeconds - (nowSeconds % config.getWindowSeconds());
-            String key = keyPrefix + "gw:rl:" + config.getName() + ":" + clientIp(exchange) + ":" + windowStart;
+            String key = keyPrefix + "gw:rl:" + config.getName() + ":" + clientIp(exchange, clientIpHeader) + ":" + windowStart;
             return counter.increment(key, window)
                     .onErrorResume(e -> {
                         log.warn("요청 제한 카운터를 쓰지 못해 제한 없이 통과시킵니다: {}", e.toString());
@@ -70,9 +85,21 @@ public class IpRateLimitGatewayFilterFactory
     }
 
     /**
-     * 연결 주소의 IP. gateway 앞에 프록시가 없으므로(NodePort 직접) X-Forwarded-For는 믿지 않는다.
-     * 믿으면 헤더만 바꿔 제한을 피할 수 있다.
+     * 사용자 IP. 학교 클러스터는 Cloudflare 프록시 뒤라 연결 주소가 Cloudflare(또는 NodePort SNAT 뒤 노드) IP가 되므로,
+     * 설정한 헤더(CF-Connecting-IP)가 IP 모양이면 그 값을 쓴다. X-Forwarded-For는 클라이언트가 붙일 수 있어 믿지 않는다.
+     * 한계: NodePort로 직접 붙는 요청은 이 헤더를 꾸밀 수 있다(시연 범위에서 받아들임, docs decisions.md).
      */
+    static String clientIp(ServerWebExchange exchange, String clientIpHeader) {
+        if (clientIpHeader != null) {
+            String value = exchange.getRequest().getHeaders().getFirst(clientIpHeader);
+            if (value != null && IP_LITERAL.matcher(value.trim()).matches()) {
+                return value.trim();
+            }
+        }
+        return clientIp(exchange);
+    }
+
+    /** 연결 주소의 IP. */
     static String clientIp(ServerWebExchange exchange) {
         InetSocketAddress remote = exchange.getRequest().getRemoteAddress();
         if (remote == null) {

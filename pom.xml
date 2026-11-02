@@ -13,7 +13,7 @@
 
     <groupId>com.gakdo.trace</groupId>
     <artifactId>gateway</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
     <name>gateway</name>
     <description>TRACE gateway: JWT 검증·경로 라우팅·요청 제한 (Spring Cloud Gateway)</description>
 

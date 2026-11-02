@@ -1,5 +1,5 @@
 # 생성 파일: scripts/gen_access_policy.py가 contracts OpenAPI의 x-trace-access로 만든다. 손으로 고치지 않는다.
-# contracts 커밋: de2ff0e
+# contracts 커밋: c0dfcba
 rules:
 - {method: GET, path: /api/v1/auth/ping, public: true}
 - {method: POST, path: /api/v1/auth/signup, public: true}
@@ -44,6 +44,11 @@ rules:
 - {method: GET, path: /api/v1/captures/ping, public: true}
 - method: POST
   path: /api/v1/captures/sets
+  roles: [BOOTH, CUSTOMER]
+  scope: CHECKPOINT
+  captureToken: true
+- method: POST
+  path: /api/v1/captures/sets/{setId}/uploads
   roles: [BOOTH, CUSTOMER]
   scope: CHECKPOINT
   captureToken: true

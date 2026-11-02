@@ -13,7 +13,7 @@
 
     <groupId>com.gakdo.trace</groupId>
     <artifactId>gateway</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
     <name>gateway</name>
     <description>TRACE gateway: JWT 검증·경로 라우팅·요청 제한 (Spring Cloud Gateway)</description>
 
@@ -44,6 +44,16 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <!-- GW1: JWT 검증(auth-server JWKS)과 역할×경로 인가 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+        </dependency>
+        <!-- GW1: 로그인·페어링 코드 요청 제한 카운터(키 접두사 trace:) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis-reactive</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

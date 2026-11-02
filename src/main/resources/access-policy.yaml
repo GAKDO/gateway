@@ -1,0 +1,173 @@
+# 생성 파일: scripts/gen_access_policy.py가 contracts OpenAPI의 x-trace-access로 만든다. 손으로 고치지 않는다.
+# contracts 커밋: c0dfcba
+rules:
+- {method: GET, path: /api/v1/auth/ping, public: true}
+- {method: POST, path: /api/v1/auth/signup, public: true}
+- {method: POST, path: /api/v1/auth/email/verify, public: true}
+- {method: POST, path: /api/v1/auth/email/resend, public: true}
+- {method: POST, path: /api/v1/auth/login, public: true}
+- {method: POST, path: /api/v1/auth/refresh, public: true}
+- method: POST
+  path: /api/v1/auth/logout
+  roles: [ADMIN, CUSTOMER]
+  scope: NONE
+  captureToken: false
+- {method: POST, path: /api/v1/auth/password/reset-request, public: true}
+- {method: POST, path: /api/v1/auth/password/reset, public: true}
+- method: GET
+  path: /api/v1/auth/me
+  roles: [ADMIN, CUSTOMER]
+  scope: NONE
+  captureToken: false
+- method: DELETE
+  path: /api/v1/auth/me
+  roles: [CUSTOMER]
+  scope: NONE
+  captureToken: false
+- method: POST
+  path: /api/v1/auth/capture-links
+  roles: [ADMIN]
+  scope: NONE
+  captureToken: false
+- method: POST
+  path: /api/v1/auth/capture-links/exchange
+  roles: [CUSTOMER]
+  scope: NONE
+  captureToken: false
+- {method: POST, path: /api/v1/auth/booth/token, public: true}
+- method: POST
+  path: /api/v1/auth/pairing-codes
+  roles: [ADMIN]
+  scope: NONE
+  captureToken: false
+- {method: POST, path: /api/v1/auth/pairing-codes/exchange, public: true}
+- {method: GET, path: /api/v1/captures/ping, public: true}
+- method: POST
+  path: /api/v1/captures/sets
+  roles: [BOOTH, CUSTOMER]
+  scope: CHECKPOINT
+  captureToken: true
+- method: POST
+  path: /api/v1/captures/sets/{setId}/uploads
+  roles: [BOOTH, CUSTOMER]
+  scope: CHECKPOINT
+  captureToken: true
+- method: POST
+  path: /api/v1/captures/sets/{setId}/complete
+  roles: [BOOTH, CUSTOMER]
+  scope: CHECKPOINT
+  captureToken: true
+- method: POST
+  path: /api/v1/captures/sets/{setId}/detections
+  roles: [BOOTH]
+  scope: BOOTH
+  captureToken: false
+- method: GET
+  path: /api/v1/captures/sets/{setId}
+  roles: [ADMIN, CUSTOMER]
+  scope: CHECKPOINT
+  captureToken: true
+- method: GET
+  path: /api/v1/captures/checkpoints/{checkpointId}/inspection
+  roles: [ADMIN, CUSTOMER]
+  scope: OWN_RENTAL
+  captureToken: false
+- method: GET
+  path: /api/v1/captures/checkpoints/{checkpointId}/media
+  roles: [ADMIN, CUSTOMER]
+  scope: OWN_RENTAL
+  captureToken: false
+- {method: GET, path: /api/v1/diagnostics/ping, public: true}
+- method: POST
+  path: /api/v1/diagnostics/runs
+  roles: [AGENT]
+  scope: CHECKPOINT
+  captureToken: false
+- method: GET
+  path: /api/v1/diagnostics/checkpoints/{checkpointId}
+  roles: [ADMIN, CUSTOMER]
+  scope: OWN_RENTAL
+  captureToken: false
+- {method: GET, path: /api/v1/rentals/ping, public: true}
+- method: GET
+  path: /api/v1/rentals
+  roles: [ADMIN, CUSTOMER]
+  scope: NONE
+  captureToken: false
+- method: POST
+  path: /api/v1/rentals
+  roles: [ADMIN]
+  scope: NONE
+  captureToken: false
+- method: GET
+  path: /api/v1/rentals/{rentalId}
+  roles: [ADMIN, CUSTOMER]
+  scope: OWN_RENTAL
+  captureToken: false
+- method: POST
+  path: /api/v1/rentals/{rentalId}/checkpoints
+  roles: [ADMIN]
+  scope: NONE
+  captureToken: false
+- method: POST
+  path: /api/v1/rentals/{rentalId}/close
+  roles: [ADMIN]
+  scope: NONE
+  captureToken: false
+- method: GET
+  path: /api/v1/devices
+  roles: [ADMIN]
+  scope: NONE
+  captureToken: false
+- method: POST
+  path: /api/v1/devices
+  roles: [ADMIN]
+  scope: NONE
+  captureToken: false
+- method: PATCH
+  path: /api/v1/devices/{deviceId}
+  roles: [ADMIN]
+  scope: NONE
+  captureToken: false
+- method: GET
+  path: /api/v1/device-models
+  roles: [ADMIN]
+  scope: NONE
+  captureToken: false
+- method: GET
+  path: /api/v1/device-models/{modelCode}
+  roles: [ADMIN, CUSTOMER]
+  scope: NONE
+  captureToken: false
+- method: PUT
+  path: /api/v1/device-models/{modelCode}
+  roles: [ADMIN]
+  scope: NONE
+  captureToken: false
+- method: POST
+  path: /api/v1/pilot/participants
+  roles: [ADMIN]
+  scope: NONE
+  captureToken: false
+- {method: GET, path: /api/v1/reports/ping, public: true}
+- method: GET
+  path: /api/v1/reports/rentals/{rentalId}
+  roles: [ADMIN, CUSTOMER]
+  scope: OWN_RENTAL
+  captureToken: false
+- method: GET
+  path: /api/v1/reports/rentals/{rentalId}/stream
+  roles: [ADMIN, CUSTOMER]
+  scope: OWN_RENTAL
+  captureToken: true
+- method: GET
+  path: /api/v1/reports/rentals/{rentalId}/chain
+  roles: [ADMIN]
+  scope: NONE
+  captureToken: false
+- {method: GET, path: '/api/v1/verify/{verifyToken}', public: true}
+- method: GET
+  path: /api/v1/reports/search
+  roles: [ADMIN]
+  scope: NONE
+  captureToken: false

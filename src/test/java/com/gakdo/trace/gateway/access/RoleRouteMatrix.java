@@ -52,6 +52,7 @@ final class RoleRouteMatrix {
             Map.entry("리포트", row(U, OK, OWN, F, F, F)),
             Map.entry("진행률", row(U, OK, OWN, OWN, F, F)),
             Map.entry("체인 전체·검색", row(U, OK, F, F, F, F)),
+            Map.entry("수동 봉인·사용 기록", row(U, OK, F, F, F, F)),
             Map.entry("내부(밖으로 열지 않음)", row(N, N, N, N, N, N)));
 
     private static final String PUB = "가입·인증·로그인·재설정·부스 토큰·페어링 교환·ping·검증";
@@ -110,6 +111,8 @@ final class RoleRouteMatrix {
             op("리포트", "GET", "/api/v1/reports/rentals/{rentalId}"),
             op("진행률", "GET", "/api/v1/reports/rentals/{rentalId}/stream"),
             op("체인 전체·검색", "GET", "/api/v1/reports/rentals/{rentalId}/chain"),
+            op("수동 봉인·사용 기록", "POST", "/api/v1/reports/rentals/{rentalId}/checkpoints/{checkpointId}/seal"),
+            op("수동 봉인·사용 기록", "GET", "/api/v1/reports/manual-seals"),
             op(PUB, "GET", "/api/v1/verify/{verifyToken}"),
             op("체인 전체·검색", "GET", "/api/v1/reports/search"));
 

@@ -8,3 +8,4 @@ main에 버전이 적힌 CHANGELOG가 올라가면 release.yml이 태그와 GitH
 
 ### 추가
 - 블로그(AIGJ-01-002-blog/devlog) CI/CD를 옮겨 초기 구성
+- GW1 후속: contracts c0dfcba의 x-trace-access로 정책을 다시 만들어 `POST /api/v1/captures/sets/{setId}/uploads`(BOOTH·촬영 JWT)를 더함

@@ -34,8 +34,8 @@ class AccessPolicyTest {
     }
 
     @Test
-    void 계약의_api_operation_45개를_모두_읽는다() {
-        assertThat(POLICY.size()).isEqualTo(45);
+    void 계약의_api_operation_46개를_모두_읽는다() {
+        assertThat(POLICY.size()).isEqualTo(46);
     }
 
     @Test
@@ -67,6 +67,19 @@ class AccessPolicyTest {
     void 촬영_세트는_로그인_고객_토큰으로_만들_수_없다() {
         assertThat(POLICY.decide("POST", "/api/v1/captures/sets", customer(R1))).isEqualTo(AccessDecision.FORBIDDEN);
         assertThat(POLICY.decide("POST", "/api/v1/captures/sets", capture(R1))).isEqualTo(AccessDecision.ALLOW);
+    }
+
+    @Test
+    void 업로드_URL_다시_받기는_부스와_촬영_JWT만_부른다() {
+        String uploads = "/api/v1/captures/sets/s-1/uploads";
+        TokenPrincipal booth = new TokenPrincipal("b", "BOOTH", "booth-1", Set.of(), null);
+        TokenPrincipal admin = new TokenPrincipal("a", "ADMIN", null, Set.of(), null);
+        assertThat(POLICY.decide("POST", uploads, booth)).isEqualTo(AccessDecision.ALLOW);
+        assertThat(POLICY.decide("POST", uploads, capture(R1))).isEqualTo(AccessDecision.ALLOW);
+        assertThat(POLICY.decide("POST", uploads, customer(R1))).isEqualTo(AccessDecision.FORBIDDEN);
+        assertThat(POLICY.decide("POST", uploads, admin)).isEqualTo(AccessDecision.FORBIDDEN);
+        assertThat(POLICY.decide("POST", uploads, null)).isEqualTo(AccessDecision.UNAUTHENTICATED);
+        assertThat(POLICY.decide("GET", uploads, booth)).isEqualTo(AccessDecision.NOT_FOUND);
     }
 
     @Test

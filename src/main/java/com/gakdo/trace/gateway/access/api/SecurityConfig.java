@@ -7,7 +7,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
@@ -82,7 +81,7 @@ public class SecurityConfig {
                 .requestCache(ServerHttpSecurity.RequestCacheSpec::disable)
                 .cors(c -> c.configurationSource(corsConfigurationSource))
                 .authorizeExchange(ex -> ex
-                        .pathMatchers(HttpMethod.OPTIONS).permitAll()
+                        // CORS 사전 요청은 앞의 CorsWebFilter가 끝내므로 여기까지 오는 OPTIONS는 계약에 없는 작업(404)이다
                         .pathMatchers(GATEWAY_OWN_PUBLIC).permitAll()
                         .anyExchange().access(new PolicyAuthorizationManager(policy)))
                 .oauth2ResourceServer(o -> o

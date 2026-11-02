@@ -101,6 +101,19 @@ class TokenVerificationIntegrationTest extends GatewayIntegrationTest {
     }
 
     @Test
+    void 계약에_없는_경로는_깨진_토큰이_붙어도_401이_아니라_404() {
+        client.get().uri("/api/v1/internal/secret").header("Authorization", "Bearer not-a-jwt").exchange()
+                .expectStatus().isNotFound()
+                .expectBody().jsonPath("$.code").isEqualTo("NOT_FOUND");
+    }
+
+    @Test
+    void 사전_요청이_아닌_OPTIONS는_인가를_건너뛰지_못하고_404() {
+        client.options().uri("/api/v1/devices").exchange()
+                .expectStatus().isNotFound();
+    }
+
+    @Test
     void 계약에_없는_메서드는_404() {
         client.delete().uri("/api/v1/devices").header("Authorization", "Bearer " + TestTokens.admin()).exchange()
                 .expectStatus().isNotFound();

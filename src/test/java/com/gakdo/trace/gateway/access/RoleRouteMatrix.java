@@ -42,6 +42,8 @@ final class RoleRouteMatrix {
             Map.entry("QR 링크·페어링 코드 발급", row(U, OK, F, F, F, F)),
             Map.entry("QR 교환", row(U, F, OK, F, F, F)),
             Map.entry("기기·기종 목록, 렌탈·기기·기종 쓰기, 파일럿", row(U, OK, F, F, F, F)),
+            // 부스 태블릿 기기 목록(contracts #22): 부스는 목록만, 진행 중 거르기는 rental-server가 한다
+            Map.entry("렌탈 목록", row(U, OK, OWN, F, OK, F)),
             Map.entry("렌탈 읽기, 기종 치수 읽기", row(U, OK, OWN, F, F, F)),
             Map.entry("촬영 세트 생성·완료", row(U, F, F, OK, OK, F)),
             Map.entry("촬영 세트 상태", row(U, OK, F, OK, F, F)),
@@ -82,7 +84,7 @@ final class RoleRouteMatrix {
             // rental-server
             op(PUB, "GET", "/api/v1/rentals/ping"),
             op(ADMIN_WRITE, "POST", "/api/v1/rentals"),
-            op(RENTAL_READ, "GET", "/api/v1/rentals"),
+            op("렌탈 목록", "GET", "/api/v1/rentals"),
             op(RENTAL_READ, "GET", "/api/v1/rentals/{rentalId}"),
             op(ADMIN_WRITE, "POST", "/api/v1/rentals/{rentalId}/checkpoints"),
             op(ADMIN_WRITE, "POST", "/api/v1/rentals/{rentalId}/close"),

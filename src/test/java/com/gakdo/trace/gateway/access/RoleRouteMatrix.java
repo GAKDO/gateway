@@ -63,7 +63,7 @@ final class RoleRouteMatrix {
     private static final String ADMIN_WRITE = "기기·기종 목록, 렌탈·기기·기종 쓰기, 파일럿";
     private static final String RENTAL_READ = "렌탈 읽기, 기종 치수 읽기";
 
-    /** contracts의 operation 51개(ping 5개, JWKS 포함). */
+    /** contracts의 operation 52개(ping 5개, JWKS 포함). */
     static final List<Operation> OPERATIONS = List.of(
             // auth-server
             op(PUB, "GET", "/api/v1/auth/ping"),
@@ -96,6 +96,8 @@ final class RoleRouteMatrix {
             op(ADMIN_WRITE, "POST", "/api/v1/rentals/{rentalId}/close"),
             op(ADMIN_WRITE, "POST", "/api/v1/devices"),
             op(ADMIN_WRITE, "GET", "/api/v1/devices"),
+            // 기기 상세(contracts #28): 기기별 렌탈 이력 화면 머리글, 관리자만
+            op(ADMIN_WRITE, "GET", "/api/v1/devices/{deviceId}"),
             op(ADMIN_WRITE, "PATCH", "/api/v1/devices/{deviceId}"),
             op(ADMIN_WRITE, "GET", "/api/v1/device-models"),
             op(RENTAL_READ, "GET", "/api/v1/device-models/{modelCode}"),

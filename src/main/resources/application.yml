@@ -67,6 +67,23 @@ spring:
                 - Method=POST
               filters:
                 - IpRateLimit=email-resend, 10, 60
+            # 보안 점검(11/8): 비밀번호 재설정 요청(메일 발송)·재설정(6자리 코드 확인)도 IP당 분당 10회
+            - id: auth-password-reset-request
+              uri: ${AUTH_SERVER_URL:http://auth-server:8080}
+              order: -1
+              predicates:
+                - Path=/api/v1/auth/password/reset-request
+                - Method=POST
+              filters:
+                - IpRateLimit=password-reset-request, 10, 60
+            - id: auth-password-reset
+              uri: ${AUTH_SERVER_URL:http://auth-server:8080}
+              order: -1
+              predicates:
+                - Path=/api/v1/auth/password/reset
+                - Method=POST
+              filters:
+                - IpRateLimit=password-reset, 10, 60
             - id: auth
               uri: ${AUTH_SERVER_URL:http://auth-server:8080}
               predicates:

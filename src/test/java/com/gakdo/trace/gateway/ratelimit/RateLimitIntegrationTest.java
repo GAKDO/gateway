@@ -55,4 +55,16 @@ class RateLimitIntegrationTest extends GatewayIntegrationTest {
                     .expectBody().jsonPath("$.code").isEqualTo("RATE_LIMITED");
         }
     }
+
+    @Test
+    void 비밀번호_재설정_요청과_재설정도_같은_IP에서_분당_10회를_넘으면_제한된다() {
+        for (String path : new String[] {"/api/v1/auth/password/reset-request", "/api/v1/auth/password/reset"}) {
+            for (int i = 0; i < 10; i++) {
+                client.post().uri(path).exchange().expectStatus().isOk();
+            }
+            client.post().uri(path).exchange()
+                    .expectStatus().isEqualTo(429)
+                    .expectBody().jsonPath("$.code").isEqualTo("RATE_LIMITED");
+        }
+    }
 }

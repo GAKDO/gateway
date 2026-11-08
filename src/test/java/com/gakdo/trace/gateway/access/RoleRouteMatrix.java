@@ -131,6 +131,11 @@ final class RoleRouteMatrix {
             op("수동 봉인·사용 기록", "POST", "/api/v1/reports/rentals/{rentalId}/checkpoints/{checkpointId}/seal"),
             op("수동 봉인·사용 기록", "GET", "/api/v1/reports/manual-seals"),
             op(PUB, "GET", "/api/v1/verify/{verifyToken}"),
+            // 공개 보유 기기 목록·상세(11/8, contracts #33): 로그인 없이
+            op(PUB, "GET", "/api/v1/catalog/devices"),
+            op(PUB, "GET", "/api/v1/captures/catalog"),
+            op(PUB, "GET", "/api/v1/captures/catalog/checkpoints/{checkpointId}"),
+            op(PUB, "GET", "/api/v1/diagnostics/catalog"),
             op("체인 전체·검색", "GET", "/api/v1/reports/search"));
 
     private RoleRouteMatrix() {

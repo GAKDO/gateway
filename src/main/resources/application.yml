@@ -84,6 +84,31 @@ spring:
                 - Method=POST
               filters:
                 - IpRateLimit=password-reset, 10, 60
+            # 공개 보유 기기 목록·상세(11/8, contracts #33): 로그인 없이 열리므로 IP당 분당 300회(행사장은 여러 사람이 같은 IP라 넉넉히). 서버별 라우트보다 먼저 맞도록 order를 낮춘다
+            - id: catalog-devices
+              uri: ${RENTAL_SERVER_URL:http://rental-server:8080}
+              order: -1
+              predicates:
+                - Path=/api/v1/catalog/devices
+                - Method=GET
+              filters:
+                - IpRateLimit=catalog, 300, 60
+            - id: catalog-captures
+              uri: ${CAPTURE_SERVER_URL:http://capture-server:8080}
+              order: -1
+              predicates:
+                - Path=/api/v1/captures/catalog,/api/v1/captures/catalog/**
+                - Method=GET
+              filters:
+                - IpRateLimit=catalog, 300, 60
+            - id: catalog-diagnostics
+              uri: ${DIAGNOSTICS_SERVER_URL:http://diagnostics-server:8080}
+              order: -1
+              predicates:
+                - Path=/api/v1/diagnostics/catalog
+                - Method=GET
+              filters:
+                - IpRateLimit=catalog, 300, 60
             - id: auth
               uri: ${AUTH_SERVER_URL:http://auth-server:8080}
               predicates:

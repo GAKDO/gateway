@@ -53,6 +53,7 @@ final class RoleRouteMatrix {
             Map.entry("검사 결과·사진 URL 읽기", row(U, OK, OWN, F, F, F)),
             // 성능 그래프(contracts #29): 관리자만
             Map.entry("성능 기록", row(U, OK, F, F, F, F)),
+            Map.entry("흠집 후보 검수", row(U, OK, F, F, F, F)),
             Map.entry("진단 올리기", row(U, F, F, F, F, OK)),
             Map.entry("진단 결과 읽기", row(U, OK, OWN, F, F, F)),
             Map.entry("리포트", row(U, OK, OWN, F, F, F)),
@@ -65,7 +66,7 @@ final class RoleRouteMatrix {
     private static final String ADMIN_WRITE = "기기·기종 목록, 렌탈·기기·기종 쓰기, 파일럿";
     private static final String RENTAL_READ = "렌탈 읽기, 기종 치수 읽기";
 
-    /** contracts의 operation 53개(ping 5개, JWKS 포함). */
+    /** contracts의 operation 56개(ping 5개, JWKS 포함). */
     static final List<Operation> OPERATIONS = List.of(
             // auth-server
             op(PUB, "GET", "/api/v1/auth/ping"),
@@ -115,6 +116,9 @@ final class RoleRouteMatrix {
             op("검사 결과·사진 URL 읽기", "GET", "/api/v1/captures/checkpoints/{checkpointId}/inspection"),
             op("검사 결과·사진 URL 읽기", "GET", "/api/v1/captures/checkpoints/{checkpointId}/media"),
             op("성능 기록", "GET", "/api/v1/captures/benchmarks"),
+            op("흠집 후보 검수", "GET", "/api/v1/captures/reviews"),
+            op("흠집 후보 검수", "POST", "/api/v1/captures/checkpoints/{checkpointId}/reviews"),
+            op("흠집 후보 검수", "POST", "/api/v1/captures/checkpoints/{checkpointId}/reviews/complete"),
             // diagnostics-server
             op(PUB, "GET", "/api/v1/diagnostics/ping"),
             op("진단 올리기", "POST", "/api/v1/diagnostics/runs"),

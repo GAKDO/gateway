@@ -40,6 +40,33 @@ spring:
                 - Method=POST
               filters:
                 - IpRateLimit=pairing, 10, 60
+            # 계약 429: 가입·인증 코드 확인·재발송도 IP당 분당 10회(코드 맞히기·메일 폭탄 막기)
+            - id: auth-signup
+              uri: ${AUTH_SERVER_URL:http://auth-server:8080}
+              order: -1
+              predicates:
+                - Path=/api/v1/auth/signup
+                - Method=POST
+              filters:
+                - IpRateLimit=signup, 10, 60
+            # 계약 429: 가입·인증 코드 확인·재발송도 IP당 분당 10회(코드 맞히기·메일 폭탄 막기)
+            - id: auth-email-verify
+              uri: ${AUTH_SERVER_URL:http://auth-server:8080}
+              order: -1
+              predicates:
+                - Path=/api/v1/auth/email/verify
+                - Method=POST
+              filters:
+                - IpRateLimit=email-verify, 10, 60
+            # 계약 429: 가입·인증 코드 확인·재발송도 IP당 분당 10회(코드 맞히기·메일 폭탄 막기)
+            - id: auth-email-resend
+              uri: ${AUTH_SERVER_URL:http://auth-server:8080}
+              order: -1
+              predicates:
+                - Path=/api/v1/auth/email/resend
+                - Method=POST
+              filters:
+                - IpRateLimit=email-resend, 10, 60
             - id: auth
               uri: ${AUTH_SERVER_URL:http://auth-server:8080}
               predicates:

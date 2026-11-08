@@ -43,4 +43,16 @@ class RateLimitIntegrationTest extends GatewayIntegrationTest {
         client.post().uri("/api/v1/auth/signup").exchange().expectStatus().isOk();
         client.post().uri("/api/v1/auth/pairing-codes/exchange").exchange().expectStatus().isOk();
     }
+
+    @Test
+    void 가입_인증코드_확인_재발송도_같은_IP에서_분당_10회를_넘으면_제한된다() {
+        for (String path : new String[] {"/api/v1/auth/signup", "/api/v1/auth/email/verify", "/api/v1/auth/email/resend"}) {
+            for (int i = 0; i < 10; i++) {
+                client.post().uri(path).exchange().expectStatus().isOk();
+            }
+            client.post().uri(path).exchange()
+                    .expectStatus().isEqualTo(429)
+                    .expectBody().jsonPath("$.code").isEqualTo("RATE_LIMITED");
+        }
+    }
 }

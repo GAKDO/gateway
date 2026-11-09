@@ -119,6 +119,8 @@ final class RoleRouteMatrix {
             op("흠집 후보 검수", "GET", "/api/v1/captures/reviews"),
             op("흠집 후보 검수", "POST", "/api/v1/captures/checkpoints/{checkpointId}/reviews"),
             op("흠집 후보 검수", "POST", "/api/v1/captures/checkpoints/{checkpointId}/reviews/complete"),
+            op("흠집 후보 검수", "POST", "/api/v1/captures/checkpoints/{checkpointId}/reviews/additions"),
+            op("흠집 후보 검수", "DELETE", "/api/v1/captures/checkpoints/{checkpointId}/reviews/additions/{defectId}"),
             // diagnostics-server
             op(PUB, "GET", "/api/v1/diagnostics/ping"),
             op("진단 올리기", "POST", "/api/v1/diagnostics/runs"),
@@ -161,6 +163,7 @@ final class RoleRouteMatrix {
                 .replace("{rentalId}", rentalId)
                 .replace("{checkpointId}", com.gakdo.trace.gateway.support.TestTokens.CHECKPOINT)
                 .replace("{setId}", "sEt0000000000000000aa")
+                .replace("{defectId}", "dFc000000000000000001")
                 .replace("{deviceId}", "dEv000000000000000501")
                 .replace("{modelCode}", "MBA13-M2")
                 .replace("{verifyToken}", "v-token");

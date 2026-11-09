@@ -35,7 +35,7 @@ class AccessPolicyTest {
 
     @Test
     void 계약의_api_operation_56개를_모두_읽는다() {
-        assertThat(POLICY.size()).isEqualTo(60);
+        assertThat(POLICY.size()).isEqualTo(62);
     }
 
     @Test

@@ -107,9 +107,12 @@ final class RoleRouteMatrix {
             // 기기 상세(contracts #28): 기기별 렌탈 이력 화면 머리글, 관리자만
             op(ADMIN_WRITE, "GET", "/api/v1/devices/{deviceId}"),
             op(ADMIN_WRITE, "PATCH", "/api/v1/devices/{deviceId}"),
+            // 기기·기종 지우기(11/10, contracts #43): 관리자만, 이력 확인은 rental-server가 한다
+            op(ADMIN_WRITE, "DELETE", "/api/v1/devices/{deviceId}"),
             op(ADMIN_WRITE, "GET", "/api/v1/device-models"),
             op(RENTAL_READ, "GET", "/api/v1/device-models/{modelCode}"),
             op(ADMIN_WRITE, "PUT", "/api/v1/device-models/{modelCode}"),
+            op(ADMIN_WRITE, "DELETE", "/api/v1/device-models/{modelCode}"),
             op(ADMIN_WRITE, "POST", "/api/v1/pilot/participants"),
             // capture-server
             op(PUB, "GET", "/api/v1/captures/ping"),

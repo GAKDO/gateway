@@ -71,7 +71,7 @@ class RoleRouteMatrixIntegrationTest extends GatewayIntegrationTest {
                 .map(op -> op.method() + " " + op.template())
                 .collect(Collectors.toSet());
         assertThat(fromTable).isEqualTo(fromPolicy);
-        assertThat(RoleRouteMatrix.cases()).hasSize(70 * 6);
+        assertThat(RoleRouteMatrix.cases()).hasSize(72 * 6);
     }
 
     private WebTestClient.ResponseSpec call(Case cell, String rentalId) {

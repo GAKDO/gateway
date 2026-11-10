@@ -96,6 +96,8 @@ final class RoleRouteMatrix {
             op(RENTAL_READ, "GET", "/api/v1/rentals/{rentalId}"),
             // 시험 렌탈 지우기(contracts #25): 관리자만, TEST- 시리얼 확인은 rental-server가 한다
             op(ADMIN_WRITE, "DELETE", "/api/v1/rentals/{rentalId}"),
+            // 렌탈 고객 이름·반납 예정일·메모 고치기(11/10, contracts #40): 관리자만
+            op(ADMIN_WRITE, "PATCH", "/api/v1/rentals/{rentalId}"),
             op(ADMIN_WRITE, "POST", "/api/v1/rentals/{rentalId}/checkpoints"),
             op(ADMIN_WRITE, "POST", "/api/v1/rentals/{rentalId}/booth-code"),
             op("부스 코드 교환", "POST", "/api/v1/rentals/booth-codes/redeem"),
@@ -118,6 +120,8 @@ final class RoleRouteMatrix {
             op("촬영 세트 상태", "GET", "/api/v1/captures/sets/{setId}"),
             op("검사 결과·사진 URL 읽기", "GET", "/api/v1/captures/checkpoints/{checkpointId}/inspection"),
             op("검사 결과·사진 URL 읽기", "GET", "/api/v1/captures/checkpoints/{checkpointId}/media"),
+            // 반납 정산서(11/10, contracts #41): 검사 결과와 같은 범위
+            op("검사 결과·사진 URL 읽기", "GET", "/api/v1/captures/checkpoints/{checkpointId}/settlement"),
             op("성능 기록", "GET", "/api/v1/captures/benchmarks"),
             op("흠집 후보 검수", "GET", "/api/v1/captures/reviews"),
             op("흠집 후보 검수", "POST", "/api/v1/captures/checkpoints/{checkpointId}/reviews"),

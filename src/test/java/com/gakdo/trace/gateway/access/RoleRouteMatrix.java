@@ -36,7 +36,7 @@ final class RoleRouteMatrix {
 
     /** 표의 행 묶음 → 6열 기대값. */
     static final Map<String, Expect[]> GROUPS = Map.ofEntries(
-            Map.entry("가입·인증·로그인·재설정·부스 토큰·페어링 교환·ping·검증", row(OK, OK, OK, OK, OK, OK)),
+            Map.entry("가입·인증·로그인·소셜 로그인·재설정·부스 토큰·페어링 교환·ping·검증", row(OK, OK, OK, OK, OK, OK)),
             Map.entry("내 정보·로그아웃", row(U, OK, OK, F, F, F)),
             Map.entry("탈퇴", row(U, F, OK, F, F, F)),
             Map.entry("QR 링크·페어링 코드 발급", row(U, OK, F, F, F, F)),
@@ -62,7 +62,7 @@ final class RoleRouteMatrix {
             Map.entry("수동 봉인·사용 기록", row(U, OK, F, F, F, F)),
             Map.entry("내부(밖으로 열지 않음)", row(N, N, N, N, N, N)));
 
-    private static final String PUB = "가입·인증·로그인·재설정·부스 토큰·페어링 교환·ping·검증";
+    private static final String PUB = "가입·인증·로그인·소셜 로그인·재설정·부스 토큰·페어링 교환·ping·검증";
     private static final String ADMIN_WRITE = "기기·기종 목록, 렌탈·기기·기종 쓰기, 파일럿";
     private static final String RENTAL_READ = "렌탈 읽기, 기종 치수 읽기";
 
@@ -74,6 +74,9 @@ final class RoleRouteMatrix {
             op(PUB, "POST", "/api/v1/auth/email/verify"),
             op(PUB, "POST", "/api/v1/auth/email/resend"),
             op(PUB, "POST", "/api/v1/auth/login"),
+            op(PUB, "GET", "/api/v1/auth/oauth/providers"),
+            op(PUB, "GET", "/api/v1/auth/oauth/{provider}/start"),
+            op(PUB, "GET", "/api/v1/auth/oauth/{provider}/callback"),
             op(PUB, "POST", "/api/v1/auth/refresh"),
             op(PUB, "POST", "/api/v1/auth/password/reset-request"),
             op(PUB, "POST", "/api/v1/auth/password/reset"),
@@ -169,7 +172,8 @@ final class RoleRouteMatrix {
                 .replace("{defectId}", "dFc000000000000000001")
                 .replace("{deviceId}", "dEv000000000000000501")
                 .replace("{modelCode}", "MBA13-M2")
-                .replace("{verifyToken}", "v-token");
+                .replace("{verifyToken}", "v-token")
+                .replace("{provider}", "google");
     }
 
     private static Expect[] row(Expect... values) {

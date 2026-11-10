@@ -60,6 +60,19 @@ class TokenVerificationIntegrationTest extends GatewayIntegrationTest {
     }
 
     @Test
+    void 챗봇은_로그인_없이_열리고_붙인_토큰은_검사하지_않고_그대로_넘긴다() {
+        client.post().uri("/api/v1/chat").exchange()
+                .expectStatus().isOk()
+                .expectBody().jsonPath("$.path").isEqualTo("/api/v1/chat");
+        client.post().uri("/api/v1/chat").header("Authorization", "Bearer " + TestTokens.expiredAdmin()).exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.hasAuthorization").isEqualTo(true)
+                .jsonPath("$.xRole").isEqualTo("");
+        client.get().uri("/api/v1/chat/ping").exchange().expectStatus().isOk();
+    }
+
+    @Test
     void 허용된_요청은_토큰_값으로_신원_헤더를_붙여_넘긴다() {
         bearer("/api/v1/captures/sets/sEt0000000000000000aa", TestTokens.capture())
                 .expectStatus().isOk()

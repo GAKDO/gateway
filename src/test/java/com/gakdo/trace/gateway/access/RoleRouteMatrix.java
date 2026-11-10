@@ -138,6 +138,9 @@ final class RoleRouteMatrix {
             op(PUB, "GET", "/api/v1/captures/catalog"),
             op(PUB, "GET", "/api/v1/captures/catalog/checkpoints/{checkpointId}"),
             op(PUB, "GET", "/api/v1/diagnostics/catalog"),
+            // 사이트 도우미 챗봇(11/10, contracts #39): 로그인 없이
+            op(PUB, "GET", "/api/v1/chat/ping"),
+            op(PUB, "POST", "/api/v1/chat"),
             op("체인 전체·검색", "GET", "/api/v1/reports/search"));
 
     private RoleRouteMatrix() {

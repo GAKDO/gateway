@@ -36,7 +36,7 @@ public abstract class GatewayIntegrationTest {
     static void backends(DynamicPropertyRegistry registry) {
         String url = StubBackend.url();
         for (String name : new String[] {"AUTH_SERVER_URL", "RENTAL_SERVER_URL", "CAPTURE_SERVER_URL",
-                "DIAGNOSTICS_SERVER_URL", "REPORT_SERVER_URL"}) {
+                "DIAGNOSTICS_SERVER_URL", "REPORT_SERVER_URL", "CHAT_SERVER_URL"}) {
             registry.add(name, () -> url);
         }
         registry.add("TRACE_WEB_ORIGIN", () -> WEB_ORIGIN);

@@ -43,4 +43,40 @@ class RateLimitIntegrationTest extends GatewayIntegrationTest {
         client.post().uri("/api/v1/auth/signup").exchange().expectStatus().isOk();
         client.post().uri("/api/v1/auth/pairing-codes/exchange").exchange().expectStatus().isOk();
     }
+
+    @Test
+    void 가입_인증코드_확인_재발송도_같은_IP에서_분당_10회를_넘으면_제한된다() {
+        for (String path : new String[] {"/api/v1/auth/signup", "/api/v1/auth/email/verify", "/api/v1/auth/email/resend"}) {
+            for (int i = 0; i < 10; i++) {
+                client.post().uri(path).exchange().expectStatus().isOk();
+            }
+            client.post().uri(path).exchange()
+                    .expectStatus().isEqualTo(429)
+                    .expectBody().jsonPath("$.code").isEqualTo("RATE_LIMITED");
+        }
+    }
+
+    @Test
+    void 소셜_로그인_시작과_콜백은_같은_IP에서_합쳐_분당_30회를_넘으면_제한된다() {
+        for (int i = 0; i < 15; i++) {
+            client.get().uri("/api/v1/auth/oauth/google/start").exchange().expectStatus().isOk();
+            client.get().uri("/api/v1/auth/oauth/github/callback").exchange().expectStatus().isOk();
+        }
+        client.get().uri("/api/v1/auth/oauth/google/start").exchange()
+                .expectStatus().isEqualTo(429)
+                .expectBody().jsonPath("$.code").isEqualTo("RATE_LIMITED");
+        client.get().uri("/api/v1/auth/oauth/providers").exchange().expectStatus().isOk();
+    }
+
+    @Test
+    void 비밀번호_재설정_요청과_재설정도_같은_IP에서_분당_10회를_넘으면_제한된다() {
+        for (String path : new String[] {"/api/v1/auth/password/reset-request", "/api/v1/auth/password/reset"}) {
+            for (int i = 0; i < 10; i++) {
+                client.post().uri(path).exchange().expectStatus().isOk();
+            }
+            client.post().uri(path).exchange()
+                    .expectStatus().isEqualTo(429)
+                    .expectBody().jsonPath("$.code").isEqualTo("RATE_LIMITED");
+        }
+    }
 }

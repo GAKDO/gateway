@@ -36,29 +36,37 @@ final class RoleRouteMatrix {
 
     /** 표의 행 묶음 → 6열 기대값. */
     static final Map<String, Expect[]> GROUPS = Map.ofEntries(
-            Map.entry("가입·인증·로그인·재설정·부스 토큰·페어링 교환·ping·검증", row(OK, OK, OK, OK, OK, OK)),
+            Map.entry("가입·인증·로그인·소셜 로그인·재설정·부스 토큰·페어링 교환·ping·검증", row(OK, OK, OK, OK, OK, OK)),
             Map.entry("내 정보·로그아웃", row(U, OK, OK, F, F, F)),
             Map.entry("탈퇴", row(U, F, OK, F, F, F)),
             Map.entry("QR 링크·페어링 코드 발급", row(U, OK, F, F, F, F)),
             Map.entry("QR 교환", row(U, F, OK, F, F, F)),
             Map.entry("기기·기종 목록, 렌탈·기기·기종 쓰기, 파일럿", row(U, OK, F, F, F, F)),
+            // 부스 태블릿 기기 목록(contracts #22): 부스는 목록만, 진행 중 거르기는 rental-server가 한다
+            Map.entry("렌탈 목록", row(U, OK, OWN, F, OK, F)),
             Map.entry("렌탈 읽기, 기종 치수 읽기", row(U, OK, OWN, F, F, F)),
+            // 부스 코드로 렌탈 고르기(contracts booth-codes/redeem): 부스 토큰만
+            Map.entry("부스 코드 교환", row(U, F, F, F, OK, F)),
             Map.entry("촬영 세트 생성·완료", row(U, F, F, OK, OK, F)),
             Map.entry("촬영 세트 상태", row(U, OK, F, OK, F, F)),
             Map.entry("탐지 결과 올리기", row(U, F, F, F, OK, F)),
             Map.entry("검사 결과·사진 URL 읽기", row(U, OK, OWN, F, F, F)),
+            // 성능 그래프(contracts #29): 관리자만
+            Map.entry("성능 기록", row(U, OK, F, F, F, F)),
+            Map.entry("흠집 후보 검수", row(U, OK, F, F, F, F)),
             Map.entry("진단 올리기", row(U, F, F, F, F, OK)),
             Map.entry("진단 결과 읽기", row(U, OK, OWN, F, F, F)),
             Map.entry("리포트", row(U, OK, OWN, F, F, F)),
             Map.entry("진행률", row(U, OK, OWN, OWN, F, F)),
             Map.entry("체인 전체·검색", row(U, OK, F, F, F, F)),
+            Map.entry("수동 봉인·사용 기록", row(U, OK, F, F, F, F)),
             Map.entry("내부(밖으로 열지 않음)", row(N, N, N, N, N, N)));
 
-    private static final String PUB = "가입·인증·로그인·재설정·부스 토큰·페어링 교환·ping·검증";
+    private static final String PUB = "가입·인증·로그인·소셜 로그인·재설정·부스 토큰·페어링 교환·ping·검증";
     private static final String ADMIN_WRITE = "기기·기종 목록, 렌탈·기기·기종 쓰기, 파일럿";
     private static final String RENTAL_READ = "렌탈 읽기, 기종 치수 읽기";
 
-    /** contracts의 operation 47개(ping 5개, JWKS 포함). */
+    /** contracts의 operation 56개(ping 5개, JWKS 포함). */
     static final List<Operation> OPERATIONS = List.of(
             // auth-server
             op(PUB, "GET", "/api/v1/auth/ping"),
@@ -66,6 +74,9 @@ final class RoleRouteMatrix {
             op(PUB, "POST", "/api/v1/auth/email/verify"),
             op(PUB, "POST", "/api/v1/auth/email/resend"),
             op(PUB, "POST", "/api/v1/auth/login"),
+            op(PUB, "GET", "/api/v1/auth/oauth/providers"),
+            op(PUB, "GET", "/api/v1/auth/oauth/{provider}/start"),
+            op(PUB, "GET", "/api/v1/auth/oauth/{provider}/callback"),
             op(PUB, "POST", "/api/v1/auth/refresh"),
             op(PUB, "POST", "/api/v1/auth/password/reset-request"),
             op(PUB, "POST", "/api/v1/auth/password/reset"),
@@ -81,16 +92,27 @@ final class RoleRouteMatrix {
             // rental-server
             op(PUB, "GET", "/api/v1/rentals/ping"),
             op(ADMIN_WRITE, "POST", "/api/v1/rentals"),
-            op(RENTAL_READ, "GET", "/api/v1/rentals"),
+            op("렌탈 목록", "GET", "/api/v1/rentals"),
             op(RENTAL_READ, "GET", "/api/v1/rentals/{rentalId}"),
+            // 시험 렌탈 지우기(contracts #25): 관리자만, TEST- 시리얼 확인은 rental-server가 한다
+            op(ADMIN_WRITE, "DELETE", "/api/v1/rentals/{rentalId}"),
+            // 렌탈 고객 이름·반납 예정일·메모 고치기(11/10, contracts #40): 관리자만
+            op(ADMIN_WRITE, "PATCH", "/api/v1/rentals/{rentalId}"),
             op(ADMIN_WRITE, "POST", "/api/v1/rentals/{rentalId}/checkpoints"),
+            op(ADMIN_WRITE, "POST", "/api/v1/rentals/{rentalId}/booth-code"),
+            op("부스 코드 교환", "POST", "/api/v1/rentals/booth-codes/redeem"),
             op(ADMIN_WRITE, "POST", "/api/v1/rentals/{rentalId}/close"),
             op(ADMIN_WRITE, "POST", "/api/v1/devices"),
             op(ADMIN_WRITE, "GET", "/api/v1/devices"),
+            // 기기 상세(contracts #28): 기기별 렌탈 이력 화면 머리글, 관리자만
+            op(ADMIN_WRITE, "GET", "/api/v1/devices/{deviceId}"),
             op(ADMIN_WRITE, "PATCH", "/api/v1/devices/{deviceId}"),
+            // 기기·기종 지우기(11/10, contracts #43): 관리자만, 이력 확인은 rental-server가 한다
+            op(ADMIN_WRITE, "DELETE", "/api/v1/devices/{deviceId}"),
             op(ADMIN_WRITE, "GET", "/api/v1/device-models"),
             op(RENTAL_READ, "GET", "/api/v1/device-models/{modelCode}"),
             op(ADMIN_WRITE, "PUT", "/api/v1/device-models/{modelCode}"),
+            op(ADMIN_WRITE, "DELETE", "/api/v1/device-models/{modelCode}"),
             op(ADMIN_WRITE, "POST", "/api/v1/pilot/participants"),
             // capture-server
             op(PUB, "GET", "/api/v1/captures/ping"),
@@ -101,6 +123,14 @@ final class RoleRouteMatrix {
             op("촬영 세트 상태", "GET", "/api/v1/captures/sets/{setId}"),
             op("검사 결과·사진 URL 읽기", "GET", "/api/v1/captures/checkpoints/{checkpointId}/inspection"),
             op("검사 결과·사진 URL 읽기", "GET", "/api/v1/captures/checkpoints/{checkpointId}/media"),
+            // 반납 정산서(11/10, contracts #41): 검사 결과와 같은 범위
+            op("검사 결과·사진 URL 읽기", "GET", "/api/v1/captures/checkpoints/{checkpointId}/settlement"),
+            op("성능 기록", "GET", "/api/v1/captures/benchmarks"),
+            op("흠집 후보 검수", "GET", "/api/v1/captures/reviews"),
+            op("흠집 후보 검수", "POST", "/api/v1/captures/checkpoints/{checkpointId}/reviews"),
+            op("흠집 후보 검수", "POST", "/api/v1/captures/checkpoints/{checkpointId}/reviews/complete"),
+            op("흠집 후보 검수", "POST", "/api/v1/captures/checkpoints/{checkpointId}/reviews/additions"),
+            op("흠집 후보 검수", "DELETE", "/api/v1/captures/checkpoints/{checkpointId}/reviews/additions/{defectId}"),
             // diagnostics-server
             op(PUB, "GET", "/api/v1/diagnostics/ping"),
             op("진단 올리기", "POST", "/api/v1/diagnostics/runs"),
@@ -110,7 +140,17 @@ final class RoleRouteMatrix {
             op("리포트", "GET", "/api/v1/reports/rentals/{rentalId}"),
             op("진행률", "GET", "/api/v1/reports/rentals/{rentalId}/stream"),
             op("체인 전체·검색", "GET", "/api/v1/reports/rentals/{rentalId}/chain"),
+            op("수동 봉인·사용 기록", "POST", "/api/v1/reports/rentals/{rentalId}/checkpoints/{checkpointId}/seal"),
+            op("수동 봉인·사용 기록", "GET", "/api/v1/reports/manual-seals"),
             op(PUB, "GET", "/api/v1/verify/{verifyToken}"),
+            // 공개 보유 기기 목록·상세(11/8, contracts #33): 로그인 없이
+            op(PUB, "GET", "/api/v1/catalog/devices"),
+            op(PUB, "GET", "/api/v1/captures/catalog"),
+            op(PUB, "GET", "/api/v1/captures/catalog/checkpoints/{checkpointId}"),
+            op(PUB, "GET", "/api/v1/diagnostics/catalog"),
+            // 사이트 도우미 챗봇(11/10, contracts #39): 로그인 없이
+            op(PUB, "GET", "/api/v1/chat/ping"),
+            op(PUB, "POST", "/api/v1/chat"),
             op("체인 전체·검색", "GET", "/api/v1/reports/search"));
 
     private RoleRouteMatrix() {
@@ -136,9 +176,11 @@ final class RoleRouteMatrix {
                 .replace("{rentalId}", rentalId)
                 .replace("{checkpointId}", com.gakdo.trace.gateway.support.TestTokens.CHECKPOINT)
                 .replace("{setId}", "sEt0000000000000000aa")
+                .replace("{defectId}", "dFc000000000000000001")
                 .replace("{deviceId}", "dEv000000000000000501")
                 .replace("{modelCode}", "MBA13-M2")
-                .replace("{verifyToken}", "v-token");
+                .replace("{verifyToken}", "v-token")
+                .replace("{provider}", "google");
     }
 
     private static Expect[] row(Expect... values) {

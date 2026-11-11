@@ -40,6 +40,84 @@ spring:
                 - Method=POST
               filters:
                 - IpRateLimit=pairing, 10, 60
+            # 계약 429: 가입·인증 코드 확인·재발송도 IP당 분당 10회(코드 맞히기·메일 폭탄 막기)
+            - id: auth-signup
+              uri: ${AUTH_SERVER_URL:http://auth-server:8080}
+              order: -1
+              predicates:
+                - Path=/api/v1/auth/signup
+                - Method=POST
+              filters:
+                - IpRateLimit=signup, 10, 60
+            # 계약 429: 가입·인증 코드 확인·재발송도 IP당 분당 10회(코드 맞히기·메일 폭탄 막기)
+            - id: auth-email-verify
+              uri: ${AUTH_SERVER_URL:http://auth-server:8080}
+              order: -1
+              predicates:
+                - Path=/api/v1/auth/email/verify
+                - Method=POST
+              filters:
+                - IpRateLimit=email-verify, 10, 60
+            # 계약 429: 가입·인증 코드 확인·재발송도 IP당 분당 10회(코드 맞히기·메일 폭탄 막기)
+            - id: auth-email-resend
+              uri: ${AUTH_SERVER_URL:http://auth-server:8080}
+              order: -1
+              predicates:
+                - Path=/api/v1/auth/email/resend
+                - Method=POST
+              filters:
+                - IpRateLimit=email-resend, 10, 60
+            # 보안 점검(11/8): 비밀번호 재설정 요청(메일 발송)·재설정(6자리 코드 확인)도 IP당 분당 10회
+            - id: auth-password-reset-request
+              uri: ${AUTH_SERVER_URL:http://auth-server:8080}
+              order: -1
+              predicates:
+                - Path=/api/v1/auth/password/reset-request
+                - Method=POST
+              filters:
+                - IpRateLimit=password-reset-request, 10, 60
+            - id: auth-password-reset
+              uri: ${AUTH_SERVER_URL:http://auth-server:8080}
+              order: -1
+              predicates:
+                - Path=/api/v1/auth/password/reset
+                - Method=POST
+              filters:
+                - IpRateLimit=password-reset, 10, 60
+            # 소셜 로그인 시작·콜백(11/10, contracts 소셜 로그인): 브라우저 이동이라 IP당 분당 30회(행사장 같은 IP 여러 명)
+            - id: auth-oauth
+              uri: ${AUTH_SERVER_URL:http://auth-server:8080}
+              order: -1
+              predicates:
+                - Path=/api/v1/auth/oauth/*/start,/api/v1/auth/oauth/*/callback
+                - Method=GET
+              filters:
+                - IpRateLimit=oauth, 30, 60
+            # 공개 보유 기기 목록·상세(11/8, contracts #33): 로그인 없이 열리므로 IP당 분당 300회(행사장은 여러 사람이 같은 IP라 넉넉히). 서버별 라우트보다 먼저 맞도록 order를 낮춘다
+            - id: catalog-devices
+              uri: ${RENTAL_SERVER_URL:http://rental-server:8080}
+              order: -1
+              predicates:
+                - Path=/api/v1/catalog/devices
+                - Method=GET
+              filters:
+                - IpRateLimit=catalog, 300, 60
+            - id: catalog-captures
+              uri: ${CAPTURE_SERVER_URL:http://capture-server:8080}
+              order: -1
+              predicates:
+                - Path=/api/v1/captures/catalog,/api/v1/captures/catalog/**
+                - Method=GET
+              filters:
+                - IpRateLimit=catalog, 300, 60
+            - id: catalog-diagnostics
+              uri: ${DIAGNOSTICS_SERVER_URL:http://diagnostics-server:8080}
+              order: -1
+              predicates:
+                - Path=/api/v1/diagnostics/catalog
+                - Method=GET
+              filters:
+                - IpRateLimit=catalog, 300, 60
             - id: auth
               uri: ${AUTH_SERVER_URL:http://auth-server:8080}
               predicates:
@@ -60,6 +138,12 @@ spring:
               uri: ${REPORT_SERVER_URL:http://report-server:8080}
               predicates:
                 - Path=/api/v1/reports/**,/api/v1/verify/**
+            # 사이트 도우미 챗봇(11/10, contracts #39): 로그인 없이 열고, 요청 제한은 chat-server가 사용자·IP당 분당 20개로 건다.
+            # 공개 경로라 토큰은 검사하지 않지만 Authorization은 그대로 넘긴다(chat-server가 그 토큰으로 내 렌탈을 GET한다)
+            - id: chat
+              uri: ${CHAT_SERVER_URL:http://chat-server:8080}
+              predicates:
+                - Path=/api/v1/chat,/api/v1/chat/**
 
 trace:
   security:

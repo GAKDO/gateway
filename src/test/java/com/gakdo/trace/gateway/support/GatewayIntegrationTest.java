@@ -1,5 +1,9 @@
 package com.gakdo.trace.gateway.support;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,6 +18,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 /**
  * gateway 전체(보안 체인 + 라우트)를 실제 포트로 띄우고, 서버 5개와 auth-server JWKS는 StubBackend로 바꾼다.
  * Redis 대신 InMemoryRateCounter를 쓴다(Docker 없는 세션에서도 돈다).
+ * 요청 제한 시계는 고정해 한 테스트의 요청이 60초 창 경계를 넘지 않게 한다.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(GatewayIntegrationTest.TestBeans.class)
@@ -31,7 +36,7 @@ public abstract class GatewayIntegrationTest {
     static void backends(DynamicPropertyRegistry registry) {
         String url = StubBackend.url();
         for (String name : new String[] {"AUTH_SERVER_URL", "RENTAL_SERVER_URL", "CAPTURE_SERVER_URL",
-                "DIAGNOSTICS_SERVER_URL", "REPORT_SERVER_URL"}) {
+                "DIAGNOSTICS_SERVER_URL", "REPORT_SERVER_URL", "CHAT_SERVER_URL"}) {
             registry.add(name, () -> url);
         }
         registry.add("TRACE_WEB_ORIGIN", () -> WEB_ORIGIN);
@@ -49,6 +54,11 @@ public abstract class GatewayIntegrationTest {
         @Primary
         InMemoryRateCounter inMemoryRateCounter() {
             return new InMemoryRateCounter();
+        }
+
+        @Bean
+        Clock rateLimitClock() {
+            return Clock.fixed(Instant.parse("2026-11-08T00:00:30Z"), ZoneOffset.UTC);
         }
     }
 }

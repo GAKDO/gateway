@@ -22,14 +22,17 @@ spring:
       server:
         webflux:
           # 무중단 교체: 뒤쪽 서버에 연결하지 못했을 때만(요청이 아직 나가지 않았으므로 모든 메서드에 안전) 다시 보낸다.
-          # 서버가 낸 5xx나 시간 초과는 다시 보내지 않는다(POST가 두 번 처리되지 않게)
+          # 서버가 낸 5xx나 응답 시간 초과는 다시 보내지 않는다(POST가 두 번 처리되지 않게).
+          # 연결 시간 초과도 연결 실패라 다시 보내므로, 연결은 2초 안에 안 되면 포기해 전체 대기가 길어지지 않게 한다(같은 Docker 망이라 넉넉하다)
+          httpclient:
+            connect-timeout: 2000
           default-filters:
             - name: Retry
               args:
                 retries: 6
                 methods: GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS
                 series: ""
-                exceptions: java.net.ConnectException
+                exceptions: java.net.ConnectException,java.net.NoRouteToHostException
                 backoff:
                   firstBackoff: 50ms
                   maxBackoff: 400ms

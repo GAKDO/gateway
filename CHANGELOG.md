@@ -9,7 +9,7 @@ main에 버전이 적힌 CHANGELOG가 올라가면 release.yml이 태그와 GitH
 ### 변경
 
 - CI: SonarQube 분석 뒤 품질 게이트 판정까지 기다려 실행 요약·경고·알림에 통과/실패를 남김(이미지 빌드·배포는 막지 않음)
-- 무중단 교체 준비: 뒤쪽 서버 이름(IP)을 5초만 기억하고 여러 IP를 번갈아 쓰며, 연결하지 못했을 때만 다른 IP로 다시 보냄(서버가 낸 5xx·시간 초과는 다시 보내지 않음). 이미지에 `site.gakdo.trace.upstream-rolling` 표시를 붙임
+- 무중단 교체 준비: 뒤쪽 서버 이름(IP)을 5초만 기억하고 여러 IP를 번갈아 쓰며, 연결하지 못했을 때만 최대 6번 다시 보냄(서버가 낸 5xx·시간 초과는 다시 보내지 않음). 이미지에 `site.gakdo.trace.upstream-rolling` 표시를 붙임
 
 ### 추가
 - report-server 관리자 수동 봉인 `POST /api/v1/reports/rentals/{rentalId}/checkpoints/{checkpointId}/seal`·사용 기록 `GET /api/v1/reports/manual-seals` 접근 규칙(ADMIN만, contracts #11)

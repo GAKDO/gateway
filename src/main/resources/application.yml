@@ -26,13 +26,13 @@ spring:
           default-filters:
             - name: Retry
               args:
-                retries: 3
+                retries: 6
                 methods: GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS
                 series: ""
                 exceptions: java.net.ConnectException
                 backoff:
-                  firstBackoff: 100ms
-                  maxBackoff: 1s
+                  firstBackoff: 50ms
+                  maxBackoff: 400ms
                   factor: 2
                   basedOnPreviousValue: false
           # REST API v0의 경로 앞부분으로 서버를 고른다(GAKDO/docs design/rest-api-v0.md)

@@ -66,6 +66,19 @@ class IpRateLimitGatewayFilterFactoryTest {
     }
 
     @Test
+    void 같은_요청이_다시_지나가면_한_번만_센다() {
+        GatewayFilter filter = filter(counter);
+        MockServerWebExchange retried = from("10.0.0.1");
+        // Retry 필터가 연결 실패로 같은 교환을 7번 흘려보내는 경우
+        for (int i = 0; i < 7; i++) {
+            filter.filter(retried, chain).block();
+        }
+        assertThat(passed.get()).isEqualTo(7);
+        assertThat(counter.counts().values()).extracting(java.util.concurrent.atomic.AtomicLong::get).containsExactly(1L);
+        assertThat(retried.getResponse().getStatusCode()).isNull();
+    }
+
+    @Test
     void 다른_IP는_영향이_없다() {
         GatewayFilter filter = filter(counter);
         for (int i = 0; i < 4; i++) {

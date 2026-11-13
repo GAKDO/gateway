@@ -35,7 +35,13 @@ class AccessPolicyTest {
 
     @Test
     void 계약의_api_operation_56개를_모두_읽는다() {
-        assertThat(POLICY.size()).isEqualTo(71);
+        assertThat(POLICY.size()).isEqualTo(72);
+    }
+
+    @Test
+    void 진단_다시_하기는_관리자만_연다() {
+        assertThat(POLICY.match("POST", "/api/v1/diagnostics/checkpoints/" + R1 + "/redo")).get()
+                .satisfies(m -> assertThat(m.rule().roles()).containsExactly(TokenRole.ADMIN));
     }
 
     @Test

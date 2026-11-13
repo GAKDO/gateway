@@ -66,6 +66,11 @@ rules:
   scope: BOOTH
   captureToken: false
 - method: GET
+  path: /api/v1/captures/rentals/{rentalId}/profile
+  roles: [ADMIN, BOOTH, CUSTOMER]
+  scope: OWN_RENTAL
+  captureToken: true
+- method: GET
   path: /api/v1/captures/sets/{setId}
   roles: [ADMIN, CUSTOMER]
   scope: CHECKPOINT

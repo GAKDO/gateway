@@ -56,6 +56,8 @@ final class RoleRouteMatrix {
             Map.entry("흠집 후보 검수", row(U, OK, F, F, F, F)),
             Map.entry("진단 올리기", row(U, F, F, F, F, OK)),
             Map.entry("진단 결과 읽기", row(U, OK, OWN, F, F, F)),
+            // 진단 다시 하기(11/13, contracts #48): 관리자만
+            Map.entry("진단 다시 하기", row(U, OK, F, F, F, F)),
             Map.entry("리포트", row(U, OK, OWN, F, F, F)),
             Map.entry("진행률", row(U, OK, OWN, OWN, F, F)),
             Map.entry("체인 전체·검색", row(U, OK, F, F, F, F)),
@@ -135,6 +137,7 @@ final class RoleRouteMatrix {
             op(PUB, "GET", "/api/v1/diagnostics/ping"),
             op("진단 올리기", "POST", "/api/v1/diagnostics/runs"),
             op("진단 결과 읽기", "GET", "/api/v1/diagnostics/checkpoints/{checkpointId}"),
+            op("진단 다시 하기", "POST", "/api/v1/diagnostics/checkpoints/{checkpointId}/redo"),
             // report-server
             op(PUB, "GET", "/api/v1/reports/ping"),
             op("리포트", "GET", "/api/v1/reports/rentals/{rentalId}"),

@@ -49,6 +49,8 @@ final class RoleRouteMatrix {
             Map.entry("부스 코드 교환", row(U, F, F, F, OK, F)),
             Map.entry("촬영 세트 생성·완료", row(U, F, F, OK, OK, F)),
             Map.entry("촬영 세트 상태", row(U, OK, F, OK, F, F)),
+            // 렌탈 검사 방식(11/13): 수령·반납 전에 출고 방식 확인. 부스는 모든 렌탈, 고객·촬영 JWT는 내 렌탈만
+            Map.entry("렌탈 검사 방식", row(U, OK, OWN, OWN, OK, F)),
             Map.entry("탐지 결과 올리기", row(U, F, F, F, OK, F)),
             Map.entry("검사 결과·사진 URL 읽기", row(U, OK, OWN, F, F, F)),
             // 성능 그래프(contracts #29): 관리자만
@@ -123,6 +125,7 @@ final class RoleRouteMatrix {
             op("촬영 세트 생성·완료", "POST", "/api/v1/captures/sets/{setId}/complete"),
             op("탐지 결과 올리기", "POST", "/api/v1/captures/sets/{setId}/detections"),
             op("촬영 세트 상태", "GET", "/api/v1/captures/sets/{setId}"),
+            op("렌탈 검사 방식", "GET", "/api/v1/captures/rentals/{rentalId}/profile"),
             op("검사 결과·사진 URL 읽기", "GET", "/api/v1/captures/checkpoints/{checkpointId}/inspection"),
             op("검사 결과·사진 URL 읽기", "GET", "/api/v1/captures/checkpoints/{checkpointId}/media"),
             // 반납 정산서(11/10, contracts #41): 검사 결과와 같은 범위

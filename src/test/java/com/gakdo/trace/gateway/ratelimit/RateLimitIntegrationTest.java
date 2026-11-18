@@ -22,7 +22,8 @@ class RateLimitIntegrationTest extends GatewayIntegrationTest {
                 .expectBody()
                 .jsonPath("$.status").isEqualTo(429)
                 .jsonPath("$.code").isEqualTo("RATE_LIMITED");
-        assertThat(rateCounter.counts().keySet()).allMatch(key -> key.startsWith("trace:gw:rl:login:"));
+        assertThat(rateCounter.counts().keySet()).isNotEmpty()
+                .allMatch(key -> key.startsWith("trace:gw:rl:login:"));
     }
 
     @Test

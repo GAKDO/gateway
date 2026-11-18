@@ -126,10 +126,13 @@ class UpstreamRetryIntegrationTest {
     }
 
     private static void sleep(long millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+        // 가짜 업스트림이 늦게 답하는 상황을 만드는 대기(응답 지연 자체가 시험 조건)
+        // parkNanos는 일찍 돌아올 수 있으므로 정한 시각까지 다시 기다린다
+        long deadline = System.nanoTime() + java.util.concurrent.TimeUnit.MILLISECONDS.toNanos(millis);
+        long remaining = deadline - System.nanoTime();
+        while (remaining > 0) {
+            java.util.concurrent.locks.LockSupport.parkNanos(remaining);
+            remaining = deadline - System.nanoTime();
         }
     }
 

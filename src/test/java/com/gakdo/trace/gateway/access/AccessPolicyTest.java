@@ -110,7 +110,8 @@ class AccessPolicyTest {
 
     @Test
     void 공개가_아닌데_역할이_없는_규칙은_만들_수_없다() {
-        assertThatThrownBy(() -> new AccessRule("GET", "/x", false, Set.of(), AccessScope.NONE, false))
+        Set<TokenRole> noRoles = Set.of();
+        assertThatThrownBy(() -> new AccessRule("GET", "/x", false, noRoles, AccessScope.NONE, false))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThat(new AccessRule("GET", "/x", false, Set.of(TokenRole.ADMIN), null, false).scope())
                 .isEqualTo(AccessScope.NONE);
@@ -119,10 +120,12 @@ class AccessPolicyTest {
     @Test
     void 모르는_역할이_적힌_규칙_파일은_거부한다() {
         String yaml = "rules:\n- {method: GET, path: /x, roles: [ROOT], scope: NONE, captureToken: false}\n";
-        assertThatThrownBy(() -> AccessPolicyLoader.load(new ByteArrayResource(yaml.getBytes())))
+        ByteArrayResource unknownRole = new ByteArrayResource(yaml.getBytes());
+        ByteArrayResource noRules = new ByteArrayResource("x: 1".getBytes());
+        assertThatThrownBy(() -> AccessPolicyLoader.load(unknownRole))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("ROOT");
-        assertThatThrownBy(() -> AccessPolicyLoader.load(new ByteArrayResource("x: 1".getBytes())))
+        assertThatThrownBy(() -> AccessPolicyLoader.load(noRules))
                 .isInstanceOf(IllegalStateException.class);
     }
 

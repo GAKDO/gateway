@@ -126,11 +126,8 @@ class UpstreamRetryIntegrationTest {
     }
 
     private static void sleep(long millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        // 가짜 업스트림이 늦게 답하는 상황을 만드는 대기(응답 지연 자체가 시험 조건)
+        java.util.concurrent.locks.LockSupport.parkNanos(java.util.concurrent.TimeUnit.MILLISECONDS.toNanos(millis));
     }
 
     @TestConfiguration

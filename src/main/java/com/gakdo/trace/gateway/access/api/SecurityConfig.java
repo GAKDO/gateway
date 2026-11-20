@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gakdo.trace.gateway.access.domain.AccessPolicy;
 import com.gakdo.trace.gateway.access.infra.AccessPolicyLoader;
 import com.gakdo.trace.gateway.common.ProblemWriter;
+import com.gakdo.trace.gateway.common.UpstreamProblemHandler;
 
 /**
  * GW1 보안 체인: CORS(web 출처만) → JWT 검증(auth-server JWKS, iss) → 역할×경로 인가(access-policy.yaml).
@@ -39,6 +40,12 @@ public class SecurityConfig {
     @Bean
     public ProblemWriter problemWriter(ObjectMapper objectMapper) {
         return new ProblemWriter(objectMapper);
+    }
+
+    /** 라우팅 오류(뒤쪽 서버 연결 실패·시간 초과)도 Problem + code로 쓴다. */
+    @Bean
+    public UpstreamProblemHandler upstreamProblemHandler(ProblemWriter problemWriter) {
+        return new UpstreamProblemHandler(problemWriter);
     }
 
     @Bean

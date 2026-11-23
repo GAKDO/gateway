@@ -1,3 +1,8 @@
+// 테스트용 기대값 표: 설계 문서의 "역할 × 경로 표"를 그대로 옮긴 것(테스트 자체는 아님).
+// 가로(열) 6칸 = 로그인 안 함, 관리자, 로그인 고객, 촬영 JWT(QR 찍은 폰), 부스, 진단 에이전트.
+// 세로(행) = TRACE API 주소 하나하나. 칸마다 "통과/401/403/404/본인 렌탈만"을 적어 두었다.
+// 계약 쪽 규칙표와 이 표를 따로 손으로 만들어 두었기 때문에, 둘이 어긋나면 테스트가 깨진다.
+
 package com.gakdo.trace.gateway.access;
 
 import java.util.ArrayList;
@@ -35,6 +40,7 @@ final class RoleRouteMatrix {
     private static final Expect OWN = Expect.OWN;
 
     /** 표의 행 묶음 → 6열 기대값. */
+    // 아래 한 줄 = 주소 묶음 하나의 6칸 기대값(열 순서는 위 설명과 같다).
     static final Map<String, Expect[]> GROUPS = Map.ofEntries(
             Map.entry("가입·인증·로그인·소셜 로그인·재설정·부스 토큰·페어링 교환·ping·검증", row(OK, OK, OK, OK, OK, OK)),
             Map.entry("내 정보·로그아웃", row(U, OK, OK, F, F, F)),
@@ -71,6 +77,7 @@ final class RoleRouteMatrix {
     private static final String RENTAL_READ = "렌탈 읽기, 기종 치수 읽기";
 
     /** contracts의 operation 56개(ping 5개, JWKS 포함). */
+    // 계약의 주소를 서버별(인증·렌탈·촬영·진단·리포트·챗봇)로 모두 적고, 위 묶음 중 어디에 속하는지 붙였다.
     static final List<Operation> OPERATIONS = List.of(
             // auth-server
             op(PUB, "GET", "/api/v1/auth/ping"),
@@ -162,6 +169,7 @@ final class RoleRouteMatrix {
     private RoleRouteMatrix() {
     }
 
+    // 주소 × 6가지 사용자 = 확인할 칸 전부를 만든다.
     static List<Case> cases() {
         List<Case> cases = new ArrayList<>();
         for (Operation op : OPERATIONS) {
@@ -177,6 +185,7 @@ final class RoleRouteMatrix {
     }
 
     /** 경로 변수 채우기. rentalId는 본인 렌탈 또는 남의 렌탈. */
+    // "/rentals/{rentalId}" 같은 주소 틀에 테스트용 실제 값(렌탈·시점·기기 번호 등)을 채운다.
     static String concrete(String template, String rentalId) {
         return template
                 .replace("{rentalId}", rentalId)

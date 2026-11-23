@@ -1,3 +1,6 @@
+// 테스트 도구(테스트 자체는 아님): Redis 없이 요청 횟수를 메모리에서 세는 카운터.
+// Docker가 없는 환경에서도 요청 제한 테스트를 돌리기 위해 쓴다.
+
 package com.gakdo.trace.gateway.support;
 
 import java.time.Duration;

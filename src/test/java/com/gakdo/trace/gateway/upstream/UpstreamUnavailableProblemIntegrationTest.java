@@ -1,3 +1,5 @@
+// 이 파일이 확인하는 것: 뒤쪽 서버가 끝까지 꺼져 있을 때 gateway가 주는 오류 모양.
+
 package com.gakdo.trace.gateway.upstream;
 
 import java.io.IOException;
@@ -42,6 +44,9 @@ class UpstreamUnavailableProblemIntegrationTest {
         registry.add("CHAT_SERVER_URL", () -> "http://127.0.0.1:" + CLOSED_PORT);
     }
 
+    // [상황] 챗봇 서버가 계속 꺼져 있어 재시도 6번이 모두 실패한다.
+    // [기대] 503과 계약 오류 형식(Problem JSON, code INTERNAL_ERROR, 어느 주소였는지)으로 답한다.
+    //        웹 화면이 이 형식을 읽어 "잠시 후 다시" 안내를 띄울 수 있다.
     @Test
     void 뒤쪽_서버가_내려가_있으면_503과_Problem_INTERNAL_ERROR로_답한다() {
         client.mutate().responseTimeout(Duration.ofSeconds(15)).build()

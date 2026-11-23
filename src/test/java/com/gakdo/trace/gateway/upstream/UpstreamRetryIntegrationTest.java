@@ -1,3 +1,8 @@
+// 이 파일이 확인하는 것: 서버를 새 버전으로 바꿔 끼우는 순간(무중단 배포)의 gateway 동작.
+// - 뒤쪽 서버가 잠깐 연결을 안 받으면 gateway가 다시 보내 사용자는 오류를 보지 않는다.
+// - 하지만 서버가 실제로 처리하다 낸 오류(5xx)는 다시 보내지 않는다(같은 일을 두 번 하지 않게).
+// 챗봇 주소(/api/v1/chat)를 처음엔 닫힌 포트로 보내 놓고 시험한다.
+
 package com.gakdo.trace.gateway.upstream;
 
 import java.io.IOException;
@@ -71,6 +76,8 @@ class UpstreamRetryIntegrationTest {
         HITS.set(0);
     }
 
+    // [상황] 챗봇 서버가 꺼져 있다가 0.2초 뒤 켜진다(새 컨테이너로 넘어가는 순간).
+    // [기대] gateway가 다시 보내 결국 200과 보낸 본문 그대로를 받는다. 서버에는 1번만 도착한다.
     @Test
     @Order(1)
     void 뒤쪽_서버가_잠깐_연결을_받지_않아도_요청은_다시_보내져_본문까지_전달된다() {
@@ -90,6 +97,8 @@ class UpstreamRetryIntegrationTest {
         assertThat(HITS.get()).isEqualTo(1);
     }
 
+    // [상황] 켜진 챗봇 서버가 500 오류로 답한다.
+    // [기대] 그 오류를 그대로 사용자에게 전하고 다시 보내지 않는다(서버 도착 1번).
     @Test
     @Order(2)
     void 서버가_낸_5xx는_다시_보내지_않는다() {
@@ -103,6 +112,7 @@ class UpstreamRetryIntegrationTest {
     }
 
     /** 받은 본문을 그대로 돌려주는 가짜 chat-server. */
+    // 테스트용 가짜 챗봇 서버를 켠다.
     private static DisposableServer startChat() {
         return HttpServer.create()
                 .host("127.0.0.1")

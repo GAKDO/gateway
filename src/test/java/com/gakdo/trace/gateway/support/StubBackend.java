@@ -1,3 +1,8 @@
+// 테스트 도구(테스트 자체는 아님): 진짜 TRACE 서버들 대신 쓰는 가짜 서버.
+// - 인증 서버의 공개키(JWKS) 주소를 부르면 테스트용 공개키를 준다(토큰 서명 확인용).
+// - 다른 주소는 200과 함께 "gateway가 넘겨준 사용자 ID·역할·범위 헤더"를 그대로 돌려준다.
+// 그래서 테스트는 "gateway가 통과시켰는지, 어떤 신원을 넘겼는지"만 보면 된다.
+
 package com.gakdo.trace.gateway.support;
 
 import java.nio.charset.StandardCharsets;

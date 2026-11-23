@@ -1,3 +1,7 @@
+// 테스트 공통 바탕(테스트 자체는 아님): gateway를 실제로 띄우고, 뒤쪽 서버 6개(인증·렌탈·촬영·
+// 진단·리포트·챗봇)는 가짜 서버(StubBackend) 하나로 바꾼다. Redis 대신 메모리 카운터를 쓰고,
+// 매 테스트 전에 횟수를 0으로 되돌린다. 시계를 고정해 1분 창 경계에 걸려 결과가 흔들리지 않게 한다.
+
 package com.gakdo.trace.gateway.support;
 
 import java.time.Clock;
@@ -24,6 +28,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 @Import(GatewayIntegrationTest.TestBeans.class)
 public abstract class GatewayIntegrationTest {
 
+    // 테스트에서 "TRACE 웹사이트 주소"로 쓰는 값(CORS 허용 대상).
     public static final String WEB_ORIGIN = "https://web.trace.test";
 
     @Autowired

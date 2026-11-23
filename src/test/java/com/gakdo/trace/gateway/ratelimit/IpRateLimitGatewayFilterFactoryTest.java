@@ -57,6 +57,7 @@ class IpRateLimitGatewayFilterFactoryTest {
 
     // [상황] 같은 IP(10.0.0.1)에서 로그인을 4번 시도한다(한도 3번).
     // [기대] 3번만 통과하고 4번째는 429 RATE_LIMITED, "Retry-After: 45"(45초 뒤 다시)를 준다.
+    //        ※ 응답 코드: 429 = 요청이 너무 잦아 잠시 막음
     @Test
     void 한도를_넘으면_429와_남은_창_길이를_Retry_After로_준다() {
         GatewayFilter filter = filter(counter);

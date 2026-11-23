@@ -47,6 +47,7 @@ class UpstreamUnavailableProblemIntegrationTest {
     // [상황] 챗봇 서버가 계속 꺼져 있어 재시도 6번이 모두 실패한다.
     // [기대] 503과 계약 오류 형식(Problem JSON, code INTERNAL_ERROR, 어느 주소였는지)으로 답한다.
     //        웹 화면이 이 형식을 읽어 "잠시 후 다시" 안내를 띄울 수 있다.
+    //        ※ 응답 코드: 503 = 서버를 지금 쓸 수 없음(점검·장애)
     @Test
     void 뒤쪽_서버가_내려가_있으면_503과_Problem_INTERNAL_ERROR로_답한다() {
         client.mutate().responseTimeout(Duration.ofSeconds(15)).build()

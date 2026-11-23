@@ -4,6 +4,8 @@
 // 판단 결과: ALLOW 통과 / UNAUTHENTICATED 401 로그인 필요 / FORBIDDEN 403 권한 없음 /
 // OUT_OF_SCOPE 403 남의 렌탈 / NOT_FOUND 404 계약에 없는 주소.
 // 서버를 띄우지 않고 판단 함수만 바로 불러 본다.
+// ※ 응답 코드: 401 = 로그인 필요(토큰이 없거나 만료·위조됨), 403 = 권한 없음(누구인지는 알지만 허락되지 않은 일),
+//   404 = 찾을 수 없음(없는 주소나 데이터)
 
 package com.gakdo.trace.gateway.access;
 
@@ -69,6 +71,7 @@ class AccessPolicyTest {
 
     // [상황] 렌탈 r-1을 가진 고객이 r-1과 남의 렌탈 r-2를 조회한다. 렌탈이 하나도 없는 고객도 r-2를 조회한다.
     // [기대] 자기 렌탈 r-1만 통과, 남의 렌탈은 403 OUT_OF_SCOPE.
+    //        ※ 응답 코드: 403 = 권한 없음(누구인지는 알지만 허락되지 않은 일)
     @Test
     void 로그인_고객은_rentals_클레임의_렌탈만_읽는다() {
         assertThat(POLICY.decide("GET", "/api/v1/rentals/" + R1, customer(R1))).isEqualTo(AccessDecision.ALLOW);
@@ -90,6 +93,7 @@ class AccessPolicyTest {
 
     // [상황] 촬영 세트(사진 한 묶음)를 만드는 주소를 로그인 고객 토큰과 촬영 JWT로 각각 부른다.
     // [기대] 촬영은 QR로 받은 촬영 JWT로만 시작할 수 있고, 일반 로그인 토큰은 403.
+    //        ※ 응답 코드: 403 = 권한 없음(누구인지는 알지만 허락되지 않은 일)
     @Test
     void 촬영_세트는_로그인_고객_토큰으로_만들_수_없다() {
         assertThat(POLICY.decide("POST", "/api/v1/captures/sets", customer(R1))).isEqualTo(AccessDecision.FORBIDDEN);
@@ -98,6 +102,8 @@ class AccessPolicyTest {
 
     // [상황] 사진 업로드 주소(사전 서명 URL)를 다시 받는 기능을 여러 사용자가 부른다.
     // [기대] 부스와 촬영 JWT만 통과. 고객·관리자는 403, 토큰 없으면 401, 계약에 없는 GET 방식은 404.
+    //        ※ 응답 코드: 403 = 권한 없음(누구인지는 알지만 허락되지 않은 일), 401 = 로그인 필요(토큰이 없거나 만료·위조됨),
+    //          404 = 찾을 수 없음(없는 주소나 데이터)
     @Test
     void 업로드_URL_다시_받기는_부스와_촬영_JWT만_부른다() {
         String uploads = "/api/v1/captures/sets/s-1/uploads";
@@ -121,6 +127,7 @@ class AccessPolicyTest {
 
     // [상황] 서명은 맞지만 역할(role) 값이 비어 있는 토큰으로 기기 목록을 부른다.
     // [기대] 역할이 없으니 403.
+    //        ※ 응답 코드: 403 = 권한 없음(누구인지는 알지만 허락되지 않은 일)
     @Test
     void 역할_클레임이_없으면_403() {
         TokenPrincipal noRole = new TokenPrincipal("x", null, null, null, null);
@@ -130,6 +137,7 @@ class AccessPolicyTest {
 
     // [상황] 로그인 없이 기기 목록을 부르고, 계약에 없는 내부 주소(JWKS 공개키)를 부른다.
     // [기대] 기기 목록은 401(로그인 필요), 계약에 없는 주소는 404로 숨긴다.
+    //        ※ 응답 코드: 401 = 로그인 필요(토큰이 없거나 만료·위조됨), 404 = 찾을 수 없음(없는 주소나 데이터)
     @Test
     void 토큰이_없으면_401_계약에_없으면_404() {
         assertThat(POLICY.decide("GET", "/api/v1/devices", null)).isEqualTo(AccessDecision.UNAUTHENTICATED);
@@ -164,6 +172,7 @@ class AccessPolicyTest {
 
     // [상황] 파일 없이 "GET /a는 공개" 규칙 하나만 직접 만든다.
     // [기대] GET /a는 통과, 같은 주소의 POST는 계약에 없으니 404.
+    //        ※ 응답 코드: 404 = 찾을 수 없음(없는 주소나 데이터)
     @Test
     void 규칙_목록을_직접_만들어도_판단한다() {
         AccessPolicy policy = new AccessPolicy(List.of(AccessRule.publicRule("GET", "/a")));

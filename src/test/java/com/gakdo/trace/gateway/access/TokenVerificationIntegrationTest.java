@@ -2,6 +2,7 @@
 // - 토큰이 없거나, 만료됐거나, 다른 열쇠로 서명했거나, 발급자가 TRACE가 아니면 막는지(401).
 // - 통과한 요청에는 "누가 보냈는지"(사용자 ID·역할·범위) 헤더를 붙여 뒤쪽 서버로 넘기는지.
 // - 사용자가 직접 "나는 관리자" 헤더를 꾸며 보내도 속지 않는지.
+// ※ 응답 코드: 401 = 로그인 필요(토큰이 없거나 만료·위조됨)
 
 package com.gakdo.trace.gateway.access;
 
@@ -19,6 +20,7 @@ class TokenVerificationIntegrationTest extends GatewayIntegrationTest {
 
     // [상황] 로그인 없이 관리자용 기기 목록을 부른다.
     // [기대] 401 UNAUTHENTICATED를 계약 오류 형식(Problem JSON)으로 답하고, "Bearer 토큰이 필요"하다는 헤더를 준다.
+    //        ※ 응답 코드: 401 = 로그인 필요(토큰이 없거나 만료·위조됨)
     @Test
     void 토큰_없이_보호된_경로를_부르면_401_UNAUTHENTICATED_Problem() {
         client.get().uri(PROTECTED).exchange()
@@ -33,6 +35,7 @@ class TokenVerificationIntegrationTest extends GatewayIntegrationTest {
 
     // [상황] 유효 시간이 지난 관리자 토큰으로 부른다.
     // [기대] 401로 막는다(다시 로그인해야 함).
+    //        ※ 응답 코드: 401 = 로그인 필요(토큰이 없거나 만료·위조됨)
     @Test
     void 만료된_토큰은_401() {
         bearer(PROTECTED, TestTokens.expiredAdmin()).expectStatus().isUnauthorized()
@@ -48,6 +51,7 @@ class TokenVerificationIntegrationTest extends GatewayIntegrationTest {
 
     // [상황] 발급자가 trace가 아닌 토큰으로 부른다.
     // [기대] 401로 막는다.
+    //        ※ 응답 코드: 401 = 로그인 필요(토큰이 없거나 만료·위조됨)
     @Test
     void 발급자가_trace가_아닌_토큰은_401() {
         bearer(PROTECTED, TestTokens.wrongIssuerAdmin()).expectStatus().isUnauthorized();
@@ -62,6 +66,7 @@ class TokenVerificationIntegrationTest extends GatewayIntegrationTest {
 
     // [상황] 서명은 맞지만 TRACE에 없는 역할(ROOT)이 적힌 토큰으로 부른다.
     // [기대] 403 FORBIDDEN.
+    //        ※ 응답 코드: 403 = 권한 없음(누구인지는 알지만 허락되지 않은 일)
     @Test
     void 모르는_역할의_토큰은_403_FORBIDDEN() {
         bearer(PROTECTED, TestTokens.withRole("ROOT")).expectStatus().isForbidden()
@@ -135,6 +140,7 @@ class TokenVerificationIntegrationTest extends GatewayIntegrationTest {
 
     // [상황] 계약에 없는 내부 주소나 이상한 깊은 주소를 부른다(관리자 토큰을 붙여도).
     // [기대] 404 NOT_FOUND. 계약에 적힌 주소만 밖으로 연다.
+    //        ※ 응답 코드: 404 = 찾을 수 없음(없는 주소나 데이터)
     @Test
     void 계약에_없는_경로는_404_NOT_FOUND() {
         client.get().uri("/api/v1/internal/secret").exchange()
@@ -145,6 +151,7 @@ class TokenVerificationIntegrationTest extends GatewayIntegrationTest {
 
     // [상황] 계약에 없는 주소를 깨진 토큰과 함께 부른다.
     // [기대] 401이 아니라 404. (주소가 있는지 없는지를 토큰 오류로 짐작하지 못하게)
+    //        ※ 응답 코드: 401 = 로그인 필요(토큰이 없거나 만료·위조됨), 404 = 찾을 수 없음(없는 주소나 데이터)
     @Test
     void 계약에_없는_경로는_깨진_토큰이_붙어도_401이_아니라_404() {
         client.get().uri("/api/v1/internal/secret").header("Authorization", "Bearer not-a-jwt").exchange()
@@ -162,6 +169,7 @@ class TokenVerificationIntegrationTest extends GatewayIntegrationTest {
 
     // [상황] 관리자 토큰으로 기기 목록 주소를 DELETE 방식으로 부른다(계약에 없는 동작).
     // [기대] 404.
+    //        ※ 응답 코드: 404 = 찾을 수 없음(없는 주소나 데이터)
     @Test
     void 계약에_없는_메서드는_404() {
         client.delete().uri("/api/v1/devices").header("Authorization", "Bearer " + TestTokens.admin()).exchange()

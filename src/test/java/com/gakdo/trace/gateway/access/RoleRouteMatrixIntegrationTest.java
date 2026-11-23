@@ -43,6 +43,8 @@ class RoleRouteMatrixIntegrationTest extends GatewayIntegrationTest {
     // [상황] 표의 한 칸(주소 하나 × 사용자 하나)을 실제로 부른다. 렌탈 번호는 그 사람 본인 것.
     // [기대] 통과 칸은 뒤쪽 서버까지 전달(200), 401 칸은 UNAUTHENTICATED, 403 칸은 FORBIDDEN,
     //        404 칸은 NOT_FOUND로 답한다.
+    //        ※ 응답 코드: 200 = 정상 처리됨, 401 = 로그인 필요(토큰이 없거나 만료·위조됨), 403 = 권한 없음(누구인지는 알지만 허락되지 않은 일),
+    //          404 = 찾을 수 없음(없는 주소나 데이터)
     @ParameterizedTest(name = "{0}")
     @MethodSource("cells")
     @DisplayName("역할 × 경로 표의 모든 칸이 테스트로 확인된다")
@@ -62,6 +64,7 @@ class RoleRouteMatrixIntegrationTest extends GatewayIntegrationTest {
 
     // [상황] "본인 렌탈만" 칸을 이번에는 남의 렌탈 번호로 부른다.
     // [기대] 403 OUT_OF_SCOPE로 막는다(다른 고객의 렌탈·검사 결과를 볼 수 없음).
+    //        ※ 응답 코드: 403 = 권한 없음(누구인지는 알지만 허락되지 않은 일)
     @ParameterizedTest(name = "{0}")
     @MethodSource("ownCellsWithRentalId")
     @DisplayName("rentals 클레임에 없는 렌탈을 부르면 403 OUT_OF_SCOPE")

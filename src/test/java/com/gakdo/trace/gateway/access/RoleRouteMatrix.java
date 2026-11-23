@@ -17,6 +17,8 @@ import java.util.Map;
  * OK 허용, U 401, F 403 FORBIDDEN, N 404, OWN 본인 렌탈이면 허용·남의 렌탈이면 403 OUT_OF_SCOPE.
  * "그 시점만"·"자기 부스"·경로에 렌탈 ID가 없는 "본인"은 gateway에서 OK이고 서버가 토큰으로 다시 확인한다.
  */
+// ※ 응답 코드: 401 = 로그인 필요(토큰이 없거나 만료·위조됨), 403 = 권한 없음(누구인지는 알지만 허락되지 않은 일),
+//   404 = 찾을 수 없음(없는 주소나 데이터)
 final class RoleRouteMatrix {
 
     enum Who { PUBLIC, ADMIN, CUSTOMER, CAPTURE, BOOTH, AGENT }

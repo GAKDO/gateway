@@ -49,6 +49,8 @@ python3 scripts/gen_access_policy.py ../contracts --check  # 어긋났는지 검
 
 줄 커버리지 40% 미만이면 실패합니다(블로그와 같은 기준).
 
+통합 테스트도 Docker 없이 돕니다. 뒤쪽 서버와 auth-server JWKS는 가짜 서버(StubBackend), Redis는 메모리 카운터로 바꿔 끼워 건너뛰는 테스트가 없습니다. 테스트 이름은 한국어 메서드 이름이고, `src/test/resources/junit-platform.properties`가 밑줄을 띄어쓰기로 바꿔 보여 줍니다. 테스트마다 `[상황]`·`[기대]` 주석이 달려 있습니다.
+
 ## CI/CD
 
 | 워크플로 | 언제 | 하는 일 |

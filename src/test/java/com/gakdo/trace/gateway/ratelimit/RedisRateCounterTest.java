@@ -17,6 +17,10 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 
 import reactor.core.publisher.Flux;
 
+/**
+ * 요청 횟수를 Redis에 세는 RedisRateCounter 시험. 진짜 Redis 대신 가짜(Mockito mock)를 넣고,
+ * Redis에 어떤 명령을 보내는지만 확인한다.
+ */
 class RedisRateCounterTest {
 
     // [상황] IP 1.2.3.4의 횟수를 1 늘린다(창 1분).
@@ -30,6 +34,7 @@ class RedisRateCounterTest {
         Long count = new RedisRateCounter(redis).increment("trace:rl:1.2.3.4", Duration.ofMinutes(1)).block();
 
         assertThat(count).isEqualTo(1L);
+        // 두 번째 목록 = 세는 이름(키), 세 번째 목록 = 만료 시간. "60000"은 1분(창 크기)을 밀리초로 바꾼 값이다.
         verify(redis).execute(RedisRateCounter.INCREMENT_WITH_TTL, List.of("trace:rl:1.2.3.4"), List.of("60000"));
     }
 

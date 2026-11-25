@@ -1,3 +1,8 @@
+// 테스트용 기대값 표: 설계 문서의 "역할 × 경로 표"를 그대로 옮긴 것(테스트 자체는 아님).
+// 가로(열) 6칸 = 로그인 안 함, 관리자, 로그인 고객, 촬영 JWT(QR 찍은 폰), 부스, 진단 에이전트.
+// 세로(행) = TRACE API 주소 하나하나. 칸마다 "통과/401/403/404/본인 렌탈만"을 적어 두었다.
+// 계약 쪽 규칙표와 이 표를 따로 손으로 만들어 두었기 때문에, 둘이 어긋나면 테스트가 깨진다.
+
 package com.gakdo.trace.gateway.access;
 
 import java.util.ArrayList;
@@ -12,6 +17,8 @@ import java.util.Map;
  * OK 허용, U 401, F 403 FORBIDDEN, N 404, OWN 본인 렌탈이면 허용·남의 렌탈이면 403 OUT_OF_SCOPE.
  * "그 시점만"·"자기 부스"·경로에 렌탈 ID가 없는 "본인"은 gateway에서 OK이고 서버가 토큰으로 다시 확인한다.
  */
+// ※ 응답 코드: 401 = 로그인 필요(토큰이 없거나 만료·위조됨), 403 = 권한 없음(누구인지는 알지만 허락되지 않은 일),
+//   404 = 찾을 수 없음(없는 주소나 데이터)
 final class RoleRouteMatrix {
 
     enum Who { PUBLIC, ADMIN, CUSTOMER, CAPTURE, BOOTH, AGENT }
@@ -35,6 +42,7 @@ final class RoleRouteMatrix {
     private static final Expect OWN = Expect.OWN;
 
     /** 표의 행 묶음 → 6열 기대값. */
+    // 아래 한 줄 = 주소 묶음 하나의 6칸 기대값(열 순서는 위 설명과 같다).
     static final Map<String, Expect[]> GROUPS = Map.ofEntries(
             Map.entry("가입·인증·로그인·소셜 로그인·재설정·부스 토큰·페어링 교환·ping·검증", row(OK, OK, OK, OK, OK, OK)),
             Map.entry("내 정보·로그아웃", row(U, OK, OK, F, F, F)),
@@ -49,6 +57,8 @@ final class RoleRouteMatrix {
             Map.entry("부스 코드 교환", row(U, F, F, F, OK, F)),
             Map.entry("촬영 세트 생성·완료", row(U, F, F, OK, OK, F)),
             Map.entry("촬영 세트 상태", row(U, OK, F, OK, F, F)),
+            // 렌탈 검사 방식(11/13): 수령·반납 전에 출고 방식 확인. 부스는 모든 렌탈, 고객·촬영 JWT는 내 렌탈만
+            Map.entry("렌탈 검사 방식", row(U, OK, OWN, OWN, OK, F)),
             Map.entry("탐지 결과 올리기", row(U, F, F, F, OK, F)),
             Map.entry("검사 결과·사진 URL 읽기", row(U, OK, OWN, F, F, F)),
             // 성능 그래프(contracts #29): 관리자만
@@ -56,6 +66,8 @@ final class RoleRouteMatrix {
             Map.entry("흠집 후보 검수", row(U, OK, F, F, F, F)),
             Map.entry("진단 올리기", row(U, F, F, F, F, OK)),
             Map.entry("진단 결과 읽기", row(U, OK, OWN, F, F, F)),
+            // 진단 다시 하기(11/13, contracts #48): 관리자만
+            Map.entry("진단 다시 하기", row(U, OK, F, F, F, F)),
             Map.entry("리포트", row(U, OK, OWN, F, F, F)),
             Map.entry("진행률", row(U, OK, OWN, OWN, F, F)),
             Map.entry("체인 전체·검색", row(U, OK, F, F, F, F)),
@@ -67,6 +79,7 @@ final class RoleRouteMatrix {
     private static final String RENTAL_READ = "렌탈 읽기, 기종 치수 읽기";
 
     /** contracts의 operation 56개(ping 5개, JWKS 포함). */
+    // 계약의 주소를 서버별(인증·렌탈·촬영·진단·리포트·챗봇)로 모두 적고, 위 묶음 중 어디에 속하는지 붙였다.
     static final List<Operation> OPERATIONS = List.of(
             // auth-server
             op(PUB, "GET", "/api/v1/auth/ping"),
@@ -121,6 +134,7 @@ final class RoleRouteMatrix {
             op("촬영 세트 생성·완료", "POST", "/api/v1/captures/sets/{setId}/complete"),
             op("탐지 결과 올리기", "POST", "/api/v1/captures/sets/{setId}/detections"),
             op("촬영 세트 상태", "GET", "/api/v1/captures/sets/{setId}"),
+            op("렌탈 검사 방식", "GET", "/api/v1/captures/rentals/{rentalId}/profile"),
             op("검사 결과·사진 URL 읽기", "GET", "/api/v1/captures/checkpoints/{checkpointId}/inspection"),
             op("검사 결과·사진 URL 읽기", "GET", "/api/v1/captures/checkpoints/{checkpointId}/media"),
             // 반납 정산서(11/10, contracts #41): 검사 결과와 같은 범위
@@ -135,6 +149,7 @@ final class RoleRouteMatrix {
             op(PUB, "GET", "/api/v1/diagnostics/ping"),
             op("진단 올리기", "POST", "/api/v1/diagnostics/runs"),
             op("진단 결과 읽기", "GET", "/api/v1/diagnostics/checkpoints/{checkpointId}"),
+            op("진단 다시 하기", "POST", "/api/v1/diagnostics/checkpoints/{checkpointId}/redo"),
             // report-server
             op(PUB, "GET", "/api/v1/reports/ping"),
             op("리포트", "GET", "/api/v1/reports/rentals/{rentalId}"),
@@ -156,6 +171,7 @@ final class RoleRouteMatrix {
     private RoleRouteMatrix() {
     }
 
+    // 주소 × 6가지 사용자 = 확인할 칸 전부를 만든다.
     static List<Case> cases() {
         List<Case> cases = new ArrayList<>();
         for (Operation op : OPERATIONS) {
@@ -171,6 +187,7 @@ final class RoleRouteMatrix {
     }
 
     /** 경로 변수 채우기. rentalId는 본인 렌탈 또는 남의 렌탈. */
+    // "/rentals/{rentalId}" 같은 주소 틀에 테스트용 실제 값(렌탈·시점·기기 번호 등)을 채운다.
     static String concrete(String template, String rentalId) {
         return template
                 .replace("{rentalId}", rentalId)

@@ -33,6 +33,9 @@ public class IpRateLimitGatewayFilterFactory
     /** IPv4·IPv6 글자만 허용해 헤더 값이 Redis 키를 망가뜨리지 못하게 한다. */
     private static final Pattern IP_LITERAL = Pattern.compile("[0-9A-Fa-f:.]{2,45}");
 
+    /** 이 요청을 이미 센 뒤 통과시켰다는 표시(교환 속성 이름 앞부분). */
+    private static final String COUNTED_ATTR = IpRateLimitGatewayFilterFactory.class.getName() + ".counted.";
+
     private final String keyPrefix;
     private final String clientIpHeader;
     private final Clock clock;
@@ -64,7 +67,12 @@ public class IpRateLimitGatewayFilterFactory
     @Override
     public GatewayFilter apply(Config config) {
         Duration window = Duration.ofSeconds(config.getWindowSeconds());
+        // 기본 필터 Retry가 연결 실패로 이 필터를 다시 지나가게 해도 요청 한 건은 한 번만 센다
+        String countedKey = COUNTED_ATTR + config.getName();
         return (exchange, chain) -> {
+            if (exchange.getAttribute(countedKey) != null) {
+                return chain.filter(exchange);
+            }
             long nowSeconds = clock.instant().getEpochSecond();
             long windowStart = nowSeconds - (nowSeconds % config.getWindowSeconds());
             String key = keyPrefix + "gw:rl:" + config.getName() + ":" + clientIp(exchange, clientIpHeader) + ":" + windowStart;
@@ -75,6 +83,7 @@ public class IpRateLimitGatewayFilterFactory
                     })
                     .flatMap(count -> {
                         if (count <= config.getLimit()) {
+                            exchange.getAttributes().put(countedKey, Boolean.TRUE);
                             return chain.filter(exchange);
                         }
                         long retryAfter = Math.max(1, windowStart + config.getWindowSeconds() - nowSeconds);

@@ -21,6 +21,8 @@ COPY --from=build /layers/application/ ./
 # 배포 워크플로가 커밋 SHA를 넘긴다. 앱은 app.commit으로 읽어 /ping에 싣는다(앞 계층 캐시를 깨지 않게 맨 끝에 둔다)
 ARG APP_COMMIT=unknown
 ENV APP_COMMIT=$APP_COMMIT
+# 이 이미지는 뒤쪽 서버의 무중단 교체를 견딘다(짧은 DNS 기억 + 연결 실패 재시도). gitops autodeploy.sh가 이 표시를 보고 교체 방식을 고른다
+LABEL site.gakdo.trace.upstream-rolling="1"
 USER 10001:10001
 EXPOSE 8080
 ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]

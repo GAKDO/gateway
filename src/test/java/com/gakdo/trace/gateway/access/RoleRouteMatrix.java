@@ -21,20 +21,27 @@ import java.util.Map;
 //   404 = 찾을 수 없음(없는 주소나 데이터)
 final class RoleRouteMatrix {
 
+    // 열 6칸: 사용자 종류(로그인 안 함·관리자·고객·촬영 JWT·부스·에이전트)
     enum Who { PUBLIC, ADMIN, CUSTOMER, CAPTURE, BOOTH, AGENT }
 
+    // 칸에 적는 기대 결과(통과·401·403·404·본인 렌탈만)
     enum Expect { OK, U, F, N, OWN }
 
+    // (도구) record = 값만 담는 작은 데이터 상자. 여기서는 주소 하나(묶음 이름·방식·주소 틀)
     record Operation(String group, String method, String template) {
     }
 
+    // 표의 한 칸 = 주소 하나 × 사용자 하나 × 기대 결과
     record Case(Operation op, Who who, Expect expect) {
+        // 테스트 결과 화면에 칸 이름이 읽기 쉽게 나오도록 글자 모양을 정한다
         @Override
         public String toString() {
+            // "묶음 | 방식 주소 | 사용자 → 기대" 모양으로 이어 붙인다
             return op.group() + " | " + op.method() + " " + op.template() + " | " + who + " → " + expect;
         }
     }
 
+    // 아래 표를 짧게 쓰려고 기대 값마다 짧은 이름을 붙여 둔다
     private static final Expect OK = Expect.OK;
     private static final Expect U = Expect.U;
     private static final Expect F = Expect.F;
@@ -74,8 +81,11 @@ final class RoleRouteMatrix {
             Map.entry("수동 봉인·사용 기록", row(U, OK, F, F, F, F)),
             Map.entry("내부(밖으로 열지 않음)", row(N, N, N, N, N, N)));
 
+    // 공개 묶음 이름을 짧은 이름으로 둔다(아래 주소 목록에서 여러 번 쓰려고)
     private static final String PUB = "가입·인증·로그인·소셜 로그인·재설정·부스 토큰·페어링 교환·ping·검증";
+    // 관리자 전용 묶음 이름
     private static final String ADMIN_WRITE = "기기·기종 목록, 렌탈·기기·기종 쓰기, 파일럿";
+    // 렌탈 읽기 묶음 이름
     private static final String RENTAL_READ = "렌탈 읽기, 기종 치수 읽기";
 
     /** contracts의 operation 56개(ping 5개, JWKS 포함). */
@@ -168,46 +178,70 @@ final class RoleRouteMatrix {
             op(PUB, "POST", "/api/v1/chat"),
             op("체인 전체·검색", "GET", "/api/v1/reports/search"));
 
+    // 객체를 만들 일이 없는 표라 생성자를 막아 둔다
     private RoleRouteMatrix() {
     }
 
     // 주소 × 6가지 사용자 = 확인할 칸 전부를 만든다.
     static List<Case> cases() {
+        // 칸을 모을 빈 목록을 만든다
         List<Case> cases = new ArrayList<>();
+        // 주소마다
         for (Operation op : OPERATIONS) {
+            // 그 주소가 속한 묶음의 6칸 기대값을 꺼낸다
             Expect[] row = GROUPS.get(op.group());
+            // 묶음 이름이 표에 없으면
             if (row == null) {
+                // 표를 잘못 적은 것이니 바로 멈춘다(오타로 칸이 빠지지 않게)
                 throw new IllegalStateException("표에 없는 묶음: " + op.group());
             }
+            // 사용자 6종마다
             for (Who who : Who.values()) {
+                // 그 사용자 열(순서 번호)의 기대값으로 칸 하나를 만든다
                 cases.add(new Case(op, who, row[who.ordinal()]));
             }
         }
+        // 모든 칸을 돌려준다
         return cases;
     }
 
     /** 경로 변수 채우기. rentalId는 본인 렌탈 또는 남의 렌탈. */
     // "/rentals/{rentalId}" 같은 주소 틀에 테스트용 실제 값(렌탈·시점·기기 번호 등)을 채운다.
     static String concrete(String template, String rentalId) {
+        // 주소 틀의 자리 표시를 테스트 값으로 차례로 바꾼다
         return template
+                // 렌탈 번호는 받은 값(본인 또는 남의 렌탈)으로
                 .replace("{rentalId}", rentalId)
+                // 시점 번호는 테스트 토큰과 같은 값으로
                 .replace("{checkpointId}", com.gakdo.trace.gateway.support.TestTokens.CHECKPOINT)
+                // 촬영 세트 번호
                 .replace("{setId}", "sEt0000000000000000aa")
+                // 흠집 번호
                 .replace("{defectId}", "dFc000000000000000001")
+                // 기기 번호
                 .replace("{deviceId}", "dEv000000000000000501")
+                // 기종 코드
                 .replace("{modelCode}", "MBA13-M2")
+                // 검증 토큰
                 .replace("{verifyToken}", "v-token")
+                // 소셜 로그인 제공자
                 .replace("{provider}", "google");
     }
 
+    // 테스트 도구: 6칸 기대값 한 줄을 만든다
     private static Expect[] row(Expect... values) {
+        // 칸 수가 6개가 아니면
         if (values.length != Who.values().length) {
+            // 표를 잘못 적은 것이니 바로 멈춘다
             throw new IllegalArgumentException("열은 6개");
         }
+        // 6칸 기대값을 돌려준다
         return values;
     }
 
+    // 테스트 도구: 주소 하나를 짧게 적기 위한 도우미
     private static Operation op(String group, String method, String template) {
+        // 묶음·방식·주소 틀로 주소 정보를 만든다
         return new Operation(group, method, template);
     }
 }

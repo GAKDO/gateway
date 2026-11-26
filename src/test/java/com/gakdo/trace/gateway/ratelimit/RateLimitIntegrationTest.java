@@ -15,6 +15,7 @@ import com.gakdo.trace.gateway.support.GatewayIntegrationTest;
  * gateway를 실제로 띄우고 뒤쪽 서버는 가짜(StubBackend), 횟수는 메모리 카운터(InMemoryRateCounter)로 센다.
  * 한도를 넘으면 429 RATE_LIMITED와 Retry-After(몇 초 뒤 다시) 헤더를 준다.
  */
+// GatewayIntegrationTest를 이어받아 gateway를 실제로 띄우고 가짜 서버를 뒤에 붙인 상태에서 시험한다
 class RateLimitIntegrationTest extends GatewayIntegrationTest {
 
     // 한도 값은 application.yml의 IpRateLimit 설정(이름, 횟수, 초)과 같다. 설정을 바꾸면 여기도 맞춘다.
@@ -29,17 +30,31 @@ class RateLimitIntegrationTest extends GatewayIntegrationTest {
     //        ※ 응답 코드: 429 = 요청이 너무 잦아 잠시 막음
     @Test
     void 같은_IP에서_로그인을_연속_실패하면_제한된다() {
+        // 준비: 한도(10번)만큼 로그인을 보낸다
         for (int i = 0; i < AUTH_LIMIT_PER_MIN; i++) {
+            // (도구) client = WebTestClient. 요청을 보내고(exchange) 응답을 확인(expectStatus 등)하는 테스트용 클라이언트
+            // 한도 안이라 매번 200으로 통과하는지 확인한다
             client.post().uri("/api/v1/auth/login").exchange().expectStatus().isOk();
         }
+        // 실행: 11번째 로그인을 보낸다
         client.post().uri("/api/v1/auth/login").exchange()
+                // 확인: 429(너무 잦음)인지 확인한다
                 .expectStatus().isEqualTo(429)
+                // 응답이 표준 오류 형식(problem+json)인지 확인한다
                 .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON)
+                // "몇 초 뒤 다시" 헤더가 있는지 확인한다
                 .expectHeader().exists("Retry-After")
+                // 이제부터 응답 본문(JSON)을 확인한다
                 .expectBody()
+                // (도구) jsonPath("$.status") = 응답 JSON에서 status 칸을 가리킨다. isEqualTo(...)로 값이 맞는지 본다
+                // 본문의 status도 429인지 확인한다
                 .jsonPath("$.status").isEqualTo(429)
+                // 오류 코드가 RATE_LIMITED인지 확인한다
                 .jsonPath("$.code").isEqualTo("RATE_LIMITED");
+        // (도구) assertThat(값) = "이 값이 ~여야 한다"를 확인하는 도구. 뒤의 조건이 틀리면 테스트가 실패한다
+        // 카운터에 센 이름이 하나 이상 있고
         assertThat(rateCounter.counts().keySet()).isNotEmpty()
+                // 모두 로그인용 이름(trace:gw:rl:login:)으로 셌는지 확인한다
                 .allMatch(key -> key.startsWith("trace:gw:rl:login:"));
     }
 
@@ -48,11 +63,16 @@ class RateLimitIntegrationTest extends GatewayIntegrationTest {
     //        ※ 응답 코드: 429 = 요청이 너무 잦아 잠시 막음
     @Test
     void 페어링_코드를_10회_넘게_넣으면_제한된다() {
+        // 준비: 한도(10번)만큼 페어링 코드를 넣는다
         for (int i = 0; i < AUTH_LIMIT_PER_MIN; i++) {
+            // 한도 안이라 매번 200인지 확인한다
             client.post().uri("/api/v1/auth/pairing-codes/exchange").exchange().expectStatus().isOk();
         }
+        // 실행: 11번째로 넣는다
         client.post().uri("/api/v1/auth/pairing-codes/exchange").exchange()
+                // 확인: 429인지 확인한다
                 .expectStatus().isEqualTo(429)
+                // 오류 코드가 RATE_LIMITED인지 확인한다
                 .expectBody().jsonPath("$.code").isEqualTo("RATE_LIMITED");
     }
 
@@ -60,10 +80,14 @@ class RateLimitIntegrationTest extends GatewayIntegrationTest {
     // [기대] 제한은 기능마다 따로라 가입·페어링은 그대로 된다.
     @Test
     void 로그인_제한은_다른_auth_경로에_번지지_않는다() {
+        // 준비: 로그인을 11번 보내 로그인 제한을 걸어 둔다
         for (int i = 0; i < AUTH_LIMIT_PER_MIN + 1; i++) { // 한도를 넘겨 로그인 제한을 건다
+            // 결과는 보지 않고 보내기만 한다(횟수만 채우려고)
             client.post().uri("/api/v1/auth/login").exchange();
         }
+        // 실행+확인: 같은 IP의 회원가입은 200으로 되는지 확인한다
         client.post().uri("/api/v1/auth/signup").exchange().expectStatus().isOk();
+        // 페어링 코드도 200으로 되는지 확인한다(기능마다 따로 셈)
         client.post().uri("/api/v1/auth/pairing-codes/exchange").exchange().expectStatus().isOk();
     }
 
@@ -72,12 +96,18 @@ class RateLimitIntegrationTest extends GatewayIntegrationTest {
     //        ※ 응답 코드: 429 = 요청이 너무 잦아 잠시 막음
     @Test
     void 가입_인증코드_확인_재발송도_같은_IP에서_분당_10회를_넘으면_제한된다() {
+        // 가입·인증 코드 확인·재발송 주소를 하나씩 돌며
         for (String path : new String[] {"/api/v1/auth/signup", "/api/v1/auth/email/verify", "/api/v1/auth/email/resend"}) {
+            // 준비: 한도(10번)만큼 보낸다
             for (int i = 0; i < AUTH_LIMIT_PER_MIN; i++) {
+                // 한도 안이라 매번 200인지 확인한다
                 client.post().uri(path).exchange().expectStatus().isOk();
             }
+            // 실행: 11번째를 보낸다
             client.post().uri(path).exchange()
+                    // 확인: 429인지 확인한다
                     .expectStatus().isEqualTo(429)
+                    // 오류 코드가 RATE_LIMITED인지 확인한다
                     .expectBody().jsonPath("$.code").isEqualTo("RATE_LIMITED");
         }
     }
@@ -89,13 +119,20 @@ class RateLimitIntegrationTest extends GatewayIntegrationTest {
     void 소셜_로그인_시작과_콜백은_같은_IP에서_합쳐_분당_30회를_넘으면_제한된다() {
         // 한 바퀴에 구글 시작·깃허브 콜백 두 번을 보내므로 30 ÷ 2 = 15바퀴면 합쳐서 한도(30번)를 딱 채운다.
         // 두 경로가 한 통으로 세어지는지 보려고 일부러 섞어 보낸다.
+        // 준비: 15바퀴를 돈다
         for (int i = 0; i < OAUTH_LIMIT_PER_MIN / 2; i++) {
+            // 구글 로그인 시작을 보내고 200인지 확인한다
             client.get().uri("/api/v1/auth/oauth/google/start").exchange().expectStatus().isOk();
+            // 깃허브 콜백을 보내고 200인지 확인한다
             client.get().uri("/api/v1/auth/oauth/github/callback").exchange().expectStatus().isOk();
         }
+        // 실행: 31번째로 구글 로그인 시작을 보낸다
         client.get().uri("/api/v1/auth/oauth/google/start").exchange()
+                // 확인: 429인지 확인한다(두 경로를 합쳐 셌다는 뜻)
                 .expectStatus().isEqualTo(429)
+                // 오류 코드가 RATE_LIMITED인지 확인한다
                 .expectBody().jsonPath("$.code").isEqualTo("RATE_LIMITED");
+        // 소셜 로그인 버튼 목록 조회는 제한 없이 200인지 확인한다
         client.get().uri("/api/v1/auth/oauth/providers").exchange().expectStatus().isOk();
     }
 
@@ -104,12 +141,18 @@ class RateLimitIntegrationTest extends GatewayIntegrationTest {
     //        ※ 응답 코드: 429 = 요청이 너무 잦아 잠시 막음
     @Test
     void 비밀번호_재설정_요청과_재설정도_같은_IP에서_분당_10회를_넘으면_제한된다() {
+        // 재설정 메일 요청·재설정 실행 주소를 하나씩 돌며
         for (String path : new String[] {"/api/v1/auth/password/reset-request", "/api/v1/auth/password/reset"}) {
+            // 준비: 한도(10번)만큼 보낸다
             for (int i = 0; i < AUTH_LIMIT_PER_MIN; i++) {
+                // 한도 안이라 매번 200인지 확인한다
                 client.post().uri(path).exchange().expectStatus().isOk();
             }
+            // 실행: 11번째를 보낸다
             client.post().uri(path).exchange()
+                    // 확인: 429인지 확인한다
                     .expectStatus().isEqualTo(429)
+                    // 오류 코드가 RATE_LIMITED인지 확인한다
                     .expectBody().jsonPath("$.code").isEqualTo("RATE_LIMITED");
         }
     }

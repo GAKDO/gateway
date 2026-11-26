@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 /** gateway 전체(라우트·JWT 검증·요청 제한·CORS 설정)를 한 번에 띄워 보는 가장 기본적인 시험. */
+// (도구) @SpringBootTest = 진짜 서버처럼 스프링 앱 전체를 띄워서 시험한다
 @SpringBootTest
 class GatewayApplicationTests {
 
